@@ -18,7 +18,7 @@ def apply_action(action):
         leftWheelVelocity,rightWheelVelocity = action[0],action[1]
         p.setJointMotorControlArray(turtle,[1,2],p.VELOCITY_CONTROL, targetVelocities=[leftWheelVelocity,rightWheelVelocity],forces=[10,10])
         vel = p.getBaseVelocity(turtle)[0]
-        print("Vel: ",leftWheelVelocity, rightWheelVelocity,vel,vel)
+        print("Vel: ",leftWheelVelocity, rightWheelVelocity,vel)
         # p.setJointMotorControl2(turtle,2,p.VELOCITY_CONTROL,targetVelocity=rightWheelVelocity,force=1000)
         # p.setJointMotorControl2(turtle,1,p.VELOCITY_CONTROL,targetVelocity=leftWheelVelocity,force=1000)
 leftWheelVelocity = 0
