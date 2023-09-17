@@ -7,7 +7,7 @@ from simple_driving.resources.plane import Plane
 from simple_driving.resources.goal import Goal
 import matplotlib.pyplot as plt
 from simple_driving.resources.turtlebot_env import TurtleBot
-import time 
+import time
 
 class SimpleDrivingEnv(gym.Env):
     metadata = {'render.modes': ['human']}
@@ -31,6 +31,7 @@ class SimpleDrivingEnv(gym.Env):
         self.prev_dist_to_goal = None
         self.prev_orientation = None
         self.prev_velocity = None
+        self.prev_robot_goal_relative_pos = None
         self.rendered_img = None
         self.render_rot_matrix = None
         self.start_time = time.time()
@@ -48,15 +49,16 @@ class SimpleDrivingEnv(gym.Env):
                                   (car_ob[1] - self.goal[1]) ** 2))
         currect_orientation = np.arctan(car_ob[2]/car_ob[3])
         current_velocity = math.sqrt(((car_ob[4])**2)+(car_ob[5])**2)
-
+        current_robot_goal_relative_pos = tuple(map(lambda i, j: i - j, self.goal, car[0:2])) # self.goal - car_ob[0:2]
         """ REWARDS DURING THE EPISODE
-         rew1: positive reward if the robot moves towards goal 
-         rew2: penalty if the robot moves away from goal 
+         rew1: positive reward if the robot moves towards goal
+         rew2: penalty if the robot moves away from goal
          rew3: penalty if the orientation is changed (this code is for straight line motion) but need to check this,
                 because we can't penalize if the orientation is being corrected
                 Maybe need to save the robot's original orientation to bring it back to the original orientation
-         rew4: positive reward if robot reduces its velocity once it is close to goal, penalty if velocity increases
-         rew5: need to define to avoid overshoot situation
+         rew4: positive reward if robot reduces its velocity once it is close to goal (20cm), penalty if velocity increases
+         rew5: need to define to avoid overshoot situation: dot product of relative position vectors of goal and turtlebot in current and previous step
+                would be negative (= -1) if overshoot happens in the current step, BUT THIS NEEDS POSITION VECTORS OF GOAL AND ROBOT
         """
         # Done by running off boundaries
         if (car_ob[0] >= 10 or car_ob[0] <= -10 or
@@ -71,12 +73,16 @@ class SimpleDrivingEnv(gym.Env):
         else:
             rew1 = (self.prev_dist_to_goal - dist_to_goal)*(dist_to_goal-self.prev_dist_to_goal<0)
             rew2 = -(dist_to_goal-self.prev_dist_to_goal)*(dist_to_goal-self.prev_dist_to_goal>0)
-            rew3 = -(np.absolute(self.prev_orientation - currect_orientation))  
+            rew3 = -(np.absolute(self.prev_orientation - currect_orientation))
             rew4 = 1*(dist_to_goal < 0.2 and current_velocity < self.prev_velocity) + (-1)*(dist_to_goal < 0.2 and current_velocity > self.prev_velocity)
+            # if (dist_to_goal<0.1):
+                # rew4 = skewed_gaussian_reward?
+            rew5 = 1*(sum(tuple(ele1*ele2 for ele1,ele2 in zip(current_robot_goal_relative_pos,self.prev_robot_goal_relative_pos))))
             reward = rew1 + rew2 + rew3 + rew4
         self.prev_dist_to_goal = dist_to_goal
         self.prev_orientation = currect_orientation
         self.prev_velocity = current_velocity
+        self.prev_robot_goal_relative_pos = current_robot_goal_relative_pos
         states = car_ob[2:], dist_to_goal,
         self.start_time = time1
         ob = np.array((car_ob + self.goal) + tuple([time1-self.start_time]), dtype=np.float32)         #need to keep states as dist_to_goal, velocities and time(?)
@@ -88,7 +94,7 @@ class SimpleDrivingEnv(gym.Env):
         return [seed]
 
     def reset(self, seed=None, options=None):
-        self.start_time = time.time() 
+        self.start_time = time.time()
         p.resetSimulation(self.client)
         p.setGravity(0, 0, -10)
         # Reload the plane and car
@@ -112,8 +118,9 @@ class SimpleDrivingEnv(gym.Env):
                                            (car_ob[1] - self.goal[1]) ** 2))
         self.prev_orientation = np.arctan(car_ob[3]/car_ob[2])
         self.prev_velocity = math.sqrt(((car_ob[4])**2)+(car_ob[5])**2)
-        return np.array((car_ob + self.goal)+ tuple([time1 - self.start_time]), dtype=np.float32), {}           # dictionary to keep additional info as per stable_baselines3 
-    
+        self.prev_robot_goal_relative_pos = tuple(map(lambda i, j: i - j, self.goal, car[0:2])) #self.goal - car_ob[0:2]
+        return np.array((car_ob + self.goal)+ tuple([time1 - self.start_time]), dtype=np.float32), {}           # dictionary to keep additional info as per stable_baselines3
+
     def render(self, mode='human'):
         if self.rendered_img is None:
             self.rendered_img = plt.imshow(np.zeros((100, 100, 4)))
