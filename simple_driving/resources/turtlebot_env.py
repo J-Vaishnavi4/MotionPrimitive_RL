@@ -10,8 +10,8 @@ class TurtleBot:
         p.connect(p.DIRECT)
         p.setGravity(0,0,-10)
         offset = [0,0,0]
-        self.turtle = p.loadURDF('/home/vaishnavi/Documents/IISc/Car-Plane robot_RL/Gym-Medium-Post/turtlebot3_description/urdf/turtlebot3_burger.urdf.xacro',offset)
-        self.plane = p.loadURDF('/home/vaishnavi/Documents/IISc/Car-Plane robot_RL/Gym-Medium-Post/simple_driving/resources/simpleplane.urdf')
+        self.turtle = p.loadURDF('/home/vaishnavi/Documents/IISc/Car-Plane robot_RL/MotionPrimitive_RL/turtlebot3_description/urdf/turtlebot3_burger.urdf.xacro',offset)
+        self.plane = p.loadURDF('/home/vaishnavi/Documents/IISc/Car-Plane robot_RL/MotionPrimitive_RL/simple_driving/resources/simpleplane.urdf')
         self.wheel_joints = [1, 2]
         # Joint speed
         self.joint_speed = 0
