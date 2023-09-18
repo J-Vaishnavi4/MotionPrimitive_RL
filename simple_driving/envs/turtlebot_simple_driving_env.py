@@ -49,7 +49,7 @@ class SimpleDrivingEnv(gym.Env):
                                   (car_ob[1] - self.goal[1]) ** 2))
         currect_orientation = np.arctan(car_ob[2]/car_ob[3])
         current_velocity = math.sqrt(((car_ob[4])**2)+(car_ob[5])**2)
-        current_robot_goal_relative_pos = tuple(map(lambda i, j: i - j, self.goal, car[0:2])) # self.goal - car_ob[0:2]
+        current_robot_goal_relative_pos = tuple(map(lambda i, j: i - j, self.goal, car_ob[0:2])) # self.goal - car_ob[0:2]
         """ REWARDS DURING THE EPISODE
          rew1: positive reward if the robot moves towards goal
          rew2: penalty if the robot moves away from goal
@@ -118,7 +118,7 @@ class SimpleDrivingEnv(gym.Env):
                                            (car_ob[1] - self.goal[1]) ** 2))
         self.prev_orientation = np.arctan(car_ob[3]/car_ob[2])
         self.prev_velocity = math.sqrt(((car_ob[4])**2)+(car_ob[5])**2)
-        self.prev_robot_goal_relative_pos = tuple(map(lambda i, j: i - j, self.goal, car[0:2])) #self.goal - car_ob[0:2]
+        self.prev_robot_goal_relative_pos = tuple(map(lambda i, j: i - j, self.goal, car_ob[0:2])) #self.goal - car_ob[0:2]
         return np.array((car_ob + self.goal)+ tuple([time1 - self.start_time]), dtype=np.float32), {}           # dictionary to keep additional info as per stable_baselines3
 
     def render(self, mode='human'):
