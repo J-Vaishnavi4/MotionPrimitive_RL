@@ -7,6 +7,8 @@ from numpy.random import choice
 from copy import deepcopy
 from torch.nn.utils.convert_parameters import parameters_to_vector
 from torch.nn.utils.convert_parameters import vector_to_parameters
+import matplotlib.pyplot as plt
+from simple_driving.resources import turtlebot_env
 
 
 class TRPOAgent:
@@ -231,7 +233,8 @@ class TRPOAgent:
               max_episode_length=None, verbose=False):
 
         # Initialize env
-        env = gym.make(env_name)
+        # env = gym.make(env_name)
+        env = turtlebot_env.Turtlebot()
         if seed is not None:
             torch.manual_seed(seed)
             env.seed(seed)
@@ -267,6 +270,7 @@ class TRPOAgent:
                     self.buffers['completed_rewards'].extend(discounted_reward)
 
                     # Set final recording of episode reward to total
+                    # print("epi_rew: ",recording['episode_reward'][-1])
                     recording['episode_reward'][-1] = \
                         sum(recording['episode_reward'][-1])
                     # Recording
@@ -276,6 +280,8 @@ class TRPOAgent:
 
                     # Reset environment
                     observation = env.reset()
+                    print("new ",recording['episode_reward'][-2])
+            # plt.plot(recording['episode_reward'][0])
 
             # Print information if verbose
             if verbose:
