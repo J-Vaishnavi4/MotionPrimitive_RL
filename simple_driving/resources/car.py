@@ -6,14 +6,15 @@ import math
 class Car:
     def __init__(self, client):
         self.client = client
-        f_name = os.path.join(os.path.dirname(__file__), 'simplecar.urdf')
+        f_name = os.path.join(os.path.dirname(__file__), '/home/vaishnavi/Documents/IISc/Car-Plane robot_RL/MotionPrimitive_RL/turtlebot3_description/urdf/turtlebot3_burger.urdf.xacro')
         self.car = p.loadURDF(fileName=f_name,
                               basePosition=[0, 0, 0.1],
                               physicsClientId=client)
 
         # Joint indices as found by p.getJointInfo()
-        self.steering_joints = [0, 2]
-        self.drive_joints = [1, 3, 4, 5]
+        # self.steering_joints = [0, 2]
+        # self.drive_joints = [1, 3, 4, 5]
+        self.joints = [1,2]
         # Joint speed
         self.joint_speed = 0
         # Drag constants
@@ -28,16 +29,22 @@ class Car:
     def apply_action(self, action):
         # Expects action to be two dimensional
         throttle, steering_angle = action
+        L = 0.16
+        R = 0.033
 
         # Clip throttle and steering angle to reasonable values
         throttle = min(max(throttle, 0), 1)
         steering_angle = max(min(steering_angle, 0.6), -0.6)
 
+        rightWheelVelocity = (2*throttle + steering_angle*L)/(2*R)
+        leftWheelVelocity = (2*throttle - steering_angle*L)/(2*R)
+
+
         # Set the steering joint positions
-        p.setJointMotorControlArray(self.car, self.steering_joints,
-                                    controlMode=p.POSITION_CONTROL,
-                                    targetPositions=[steering_angle] * 2,
-                                    physicsClientId=self.client)
+        # p.setJointMotorControlArray(self.car, self.steering_joints,
+        #                             controlMode=p.POSITION_CONTROL,
+        #                             targetPositions=[steering_angle] * 2,
+        #                             physicsClientId=self.client)
 
         # Calculate drag / mechanical resistance ourselves
         # Using velocity control, as torque control requires precise models
@@ -50,13 +57,16 @@ class Car:
             self.joint_speed = 0
 
         # Set the velocity of the wheel joints directly
-        p.setJointMotorControlArray(
-            bodyUniqueId=self.car,
-            jointIndices=self.drive_joints,
-            controlMode=p.VELOCITY_CONTROL,
-            targetVelocities=[self.joint_speed] * 4,
-            forces=[1.2] * 4,
-            physicsClientId=self.client)
+        # p.setJointMotorControlArray(
+        #     bodyUniqueId=self.car,
+        #     jointIndices=self.drive_joints,
+        #     controlMode=p.VELOCITY_CONTROL,
+        #     targetVelocities=[self.joint_speed] * 4,
+        #     forces=[1.2] * 4,
+        #     physicsClientId=self.client)
+
+        p.setJointMotorControl2(bodyIndex=self.car,jointIndex=1,controlMode=p.VELOCITY_CONTROL,targetVelocity=leftWheelVelocity,force=1000,physicsClientId=self.client)
+        p.setJointMotorControl2(bodyIndex=self.car,jointIndex=2,controlMode=p.VELOCITY_CONTROL,targetVelocity=rightWheelVelocity,force=1000,physicsClientId=self.client)
 
     def get_observation(self):
         # Get the position and orientation of the car in the simulation
@@ -71,3 +81,11 @@ class Car:
         observation = (pos + ori + vel)
 
         return observation
+
+
+
+
+
+
+
+
