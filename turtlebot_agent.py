@@ -3,12 +3,13 @@ File holds self contained TRPO agent.
 """
 import torch
 import gym
+import numpy as np
 from numpy.random import choice
 from copy import deepcopy
 from torch.nn.utils.convert_parameters import parameters_to_vector
 from torch.nn.utils.convert_parameters import vector_to_parameters
 import matplotlib.pyplot as plt
-from simple_driving.resources import turtlebot_env
+from simple_driving.envs import turtlebot_simple_driving_env
 
 
 class TRPOAgent:
@@ -55,7 +56,8 @@ class TRPOAgent:
         -------
             Action choice for each action dimension.
         """
-        state = torch.as_tensor(state, dtype=torch.float32, device=self.device)
+        print("state: ",state)
+        state = torch.as_tensor(np.array(state[0]), dtype=torch.float32, device=self.device)
 
         # Parameterize distribution with policy, sample action
         normal_dist = self.distribution(self.policy(state), self.logstd.exp())
@@ -234,7 +236,7 @@ class TRPOAgent:
 
         # Initialize env
         # env = gym.make(env_name)
-        env = turtlebot_env.Turtlebot()
+        env = turtlebot_simple_driving_env.SimpleDrivingEnv()
         if seed is not None:
             torch.manual_seed(seed)
             env.seed(seed)

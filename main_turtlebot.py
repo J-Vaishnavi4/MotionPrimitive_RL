@@ -1,23 +1,23 @@
 import gym
 import torch
-from agent import TRPOAgent
+from turtlebot_agent import TRPOAgent
 import simple_driving
 import time
 import pybullet as p
-from simple_driving.envs import turtlebot_simple_drving_env
+from simple_driving.envs import turtlebot_simple_driving_env
 
 def main():
-    nn = torch.nn.Sequential(torch.nn.Linear(8, 64), torch.nn.Tanh(),
+    nn = torch.nn.Sequential(torch.nn.Linear(9, 64), torch.nn.Tanh(),
                              torch.nn.Linear(64, 2))
     agent = TRPOAgent(policy=nn)
 
-    agent.load_model("agent_turtlebot.pth")
     agent.train("turtlebot_env", seed=0, batch_size=5000, iterations=10,
                 max_episode_length=250, verbose=True)
     agent.save_model("agent_turtlebot.pth")
+    agent.load_model("agent_turtlebot.pth")
 
     # env = gym.make('SimpleDriving-v0')
-    env = turtlebot_simple_drving_env.SimpleDrivingEnv()
+    env = turtlebot_simple_driving_env.SimpleDrivingEnv()
     ob = env.reset()
     reward = 0
     done= False
