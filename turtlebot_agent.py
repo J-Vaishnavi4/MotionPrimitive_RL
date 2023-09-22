@@ -56,8 +56,8 @@ class TRPOAgent:
         -------
             Action choice for each action dimension.
         """
-        print("state: ",state)
-        state = torch.as_tensor(np.array(state[0]), dtype=torch.float32, device=self.device)
+        # print("state: ",state)
+        state = torch.as_tensor(np.array(state), dtype=torch.float32, device=self.device)
 
         # Parameterize distribution with policy, sample action
         normal_dist = self.distribution(self.policy(state), self.logstd.exp())
