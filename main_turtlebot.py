@@ -7,7 +7,7 @@ import pybullet as p
 from simple_driving.envs import turtlebot_simple_driving_env
 
 def main():
-    nn = torch.nn.Sequential(torch.nn.Linear(9, 64), torch.nn.Tanh(),
+    nn = torch.nn.Sequential(torch.nn.Linear(8, 64), torch.nn.Tanh(),
                              torch.nn.Linear(64, 2))
     agent = TRPOAgent(policy=nn)
 

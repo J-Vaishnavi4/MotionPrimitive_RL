@@ -8,6 +8,7 @@ from simple_driving.resources.goal import Goal
 import matplotlib.pyplot as plt
 from simple_driving.resources.turtlebot_env import TurtleBot
 import time
+import random
 
 class SimpleDrivingEnv(gym.Env):
     metadata = {'render.modes': ['human']}
@@ -29,7 +30,8 @@ class SimpleDrivingEnv(gym.Env):
         self.goal = None
         self.done = False
         self.prev_dist_to_goal = None
-        self.prev_orientation = None
+        # self.prev_orientation = None
+        self.initial_orientation = None
         self.prev_velocity = None
         self.prev_robot_goal_relative_pos = None
         self.rendered_img = None
@@ -53,9 +55,7 @@ class SimpleDrivingEnv(gym.Env):
         """ REWARDS DURING THE EPISODE
          rew1: positive reward if the robot moves towards goal
          rew2: penalty if the robot moves away from goal
-         rew3: penalty if the orientation is changed (this code is for straight line motion) but need to check this,
-                because we can't penalize if the orientation is being corrected
-                Maybe need to save the robot's original orientation to bring it back to the original orientation
+         rew3: penalty if the orientation varies from the robot's initial orientation
          rew4: positive reward if robot reduces its velocity once it is close to goal (20cm), penalty if velocity increases
          rew5: need to define to avoid overshoot situation: dot product of relative position vectors of goal and turtlebot in current and previous step
                 would be negative (= -1) if overshoot happens in the current step, BUT THIS NEEDS POSITION VECTORS OF GOAL AND ROBOT
@@ -66,26 +66,26 @@ class SimpleDrivingEnv(gym.Env):
             reward = -50
             self.done = True
         # Done by reaching goal
-        elif dist_to_goal < 0.05:
+        elif dist_to_goal < 0.05:       #Should we add maximum episode length as termination criteria?
             self.done = True
             reward = 50
         # Rewards during the episode
         else:
             rew1 = (self.prev_dist_to_goal - dist_to_goal)*(dist_to_goal-self.prev_dist_to_goal<0)
             rew2 = -(dist_to_goal-self.prev_dist_to_goal)*(dist_to_goal-self.prev_dist_to_goal>0)
-            rew3 = -(np.absolute(self.prev_orientation - currect_orientation))
+            rew3 = -(np.absolute(self.initial_orientation - currect_orientation))
             rew4 = 1*(dist_to_goal < 0.2 and current_velocity < self.prev_velocity) + (-1)*(dist_to_goal < 0.2 and current_velocity > self.prev_velocity)
             # if (dist_to_goal<0.1):
                 # rew4 = skewed_gaussian_reward?
             rew5 = 1*(sum(tuple(ele1*ele2 for ele1,ele2 in zip(current_robot_goal_relative_pos,self.prev_robot_goal_relative_pos))))
             reward = rew1 + rew2 + rew3 + rew4 + rew5
         self.prev_dist_to_goal = dist_to_goal
-        self.prev_orientation = currect_orientation
+        # self.prev_orientation = currect_orientation
         self.prev_velocity = current_velocity
         self.prev_robot_goal_relative_pos = current_robot_goal_relative_pos
         states = car_ob[2:], dist_to_goal,
-        self.start_time = time1
-        ob = np.array((car_ob + self.goal) + tuple([time1-self.start_time]))         #need to keep states as dist_to_goal, velocities and time(?)
+        # self.start_time = time1
+        ob = np.array((car_ob + self.goal))# + tuple([time1-self.start_time]))         #need to keep states as dist_to_goal, velocities and time(?)
         truncated = False
         return ob, reward, self.done, {}
 
@@ -103,6 +103,7 @@ class SimpleDrivingEnv(gym.Env):
 
         # Set the goal at a distance "des_dist" along its orientation
         des_dist = 1
+        # des_dist = random.uniform(1,100)                                          # Generates random number between 1 and 100 for desired distance
         # Get observation to return
         car_ob = self.turtlebot.get_observation()
         time1 = time.time()
@@ -110,17 +111,17 @@ class SimpleDrivingEnv(gym.Env):
         y = car_ob[1] + des_dist*car_ob[3]
         self.goal = (x, y)
         self.done = False
-        # self.timestep = 0
         # Visual element of the goal
         Goal(self.client, self.goal)
 
         self.prev_dist_to_goal = math.sqrt(((car_ob[0] - self.goal[0]) ** 2 +
                                            (car_ob[1] - self.goal[1]) ** 2))
-        self.prev_orientation = np.arctan(car_ob[3]/car_ob[2])
+        # self.prev_orientation = np.arctan(car_ob[3]/car_ob[2])
+        self.initial_orientation = np.arctan(car_ob[3]/car_ob[2])
         self.prev_velocity = math.sqrt(((car_ob[4])**2)+(car_ob[5])**2)
         self.prev_robot_goal_relative_pos = tuple(map(lambda i, j: i - j, self.goal, car_ob[0:2])) #self.goal - car_ob[0:2]
         # return np.array((car_ob + self.goal)+ tuple([time1 - self.start_time])), {}           # dictionary to keep additional info as per stable_baselines3
-        return np.array((car_ob + self.goal)+ tuple([time1 - self.start_time]))
+        return np.array((car_ob + self.goal)) # + tuple([time1 - self.start_time]))
     
     def render(self, mode='human'):
         if self.rendered_img is None:
