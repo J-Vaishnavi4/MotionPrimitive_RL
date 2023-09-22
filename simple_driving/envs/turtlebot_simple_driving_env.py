@@ -119,8 +119,9 @@ class SimpleDrivingEnv(gym.Env):
         self.prev_orientation = np.arctan(car_ob[3]/car_ob[2])
         self.prev_velocity = math.sqrt(((car_ob[4])**2)+(car_ob[5])**2)
         self.prev_robot_goal_relative_pos = tuple(map(lambda i, j: i - j, self.goal, car_ob[0:2])) #self.goal - car_ob[0:2]
-        return np.array((car_ob + self.goal)+ tuple([time1 - self.start_time])), {}           # dictionary to keep additional info as per stable_baselines3
-
+        # return np.array((car_ob + self.goal)+ tuple([time1 - self.start_time])), {}           # dictionary to keep additional info as per stable_baselines3
+        return np.array((car_ob + self.goal)+ tuple([time1 - self.start_time]))
+    
     def render(self, mode='human'):
         if self.rendered_img is None:
             self.rendered_img = plt.imshow(np.zeros((100, 100, 4)))
