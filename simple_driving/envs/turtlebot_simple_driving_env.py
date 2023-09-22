@@ -78,16 +78,16 @@ class SimpleDrivingEnv(gym.Env):
             # if (dist_to_goal<0.1):
                 # rew4 = skewed_gaussian_reward?
             rew5 = 1*(sum(tuple(ele1*ele2 for ele1,ele2 in zip(current_robot_goal_relative_pos,self.prev_robot_goal_relative_pos))))
-            reward = rew1 + rew2 + rew3 + rew4
+            reward = rew1 + rew2 + rew3 + rew4 + rew5
         self.prev_dist_to_goal = dist_to_goal
         self.prev_orientation = currect_orientation
         self.prev_velocity = current_velocity
         self.prev_robot_goal_relative_pos = current_robot_goal_relative_pos
         states = car_ob[2:], dist_to_goal,
         self.start_time = time1
-        ob = np.array((car_ob + self.goal) + tuple([time1-self.start_time]), dtype=np.float32)         #need to keep states as dist_to_goal, velocities and time(?)
+        ob = np.array((car_ob + self.goal) + tuple([time1-self.start_time]))         #need to keep states as dist_to_goal, velocities and time(?)
         truncated = False
-        return ob, reward, self.done, truncated, {}
+        return ob, reward, self.done, {}
 
     def seed(self, seed=None):
         self.np_random, seed = gym.utils.seeding.np_random(seed)
@@ -119,7 +119,7 @@ class SimpleDrivingEnv(gym.Env):
         self.prev_orientation = np.arctan(car_ob[3]/car_ob[2])
         self.prev_velocity = math.sqrt(((car_ob[4])**2)+(car_ob[5])**2)
         self.prev_robot_goal_relative_pos = tuple(map(lambda i, j: i - j, self.goal, car_ob[0:2])) #self.goal - car_ob[0:2]
-        return np.array((car_ob + self.goal)+ tuple([time1 - self.start_time]), dtype=np.float32), {}           # dictionary to keep additional info as per stable_baselines3
+        return np.array((car_ob + self.goal)+ tuple([time1 - self.start_time])), {}           # dictionary to keep additional info as per stable_baselines3
 
     def render(self, mode='human'):
         if self.rendered_img is None:
