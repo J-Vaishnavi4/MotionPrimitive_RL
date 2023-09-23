@@ -36,7 +36,7 @@ class SimpleDrivingEnv(gym.Env):
         self.prev_robot_goal_relative_pos = None
         self.rendered_img = None
         self.render_rot_matrix = None
-        self.start_time = time.time()
+        # self.start_time = time.time()
         self.reset()
 
     def step(self, action):
@@ -44,7 +44,7 @@ class SimpleDrivingEnv(gym.Env):
         self.turtlebot.apply_action(action)
         p.stepSimulation()
         car_ob = self.turtlebot.get_observation()
-        time1 = time.time()
+        # time1 = time.time()
 
         # Compute reward as L2 change in distance to goal
         dist_to_goal = math.sqrt(((car_ob[0] - self.goal[0]) ** 2 +
@@ -106,7 +106,7 @@ class SimpleDrivingEnv(gym.Env):
         # des_dist = random.uniform(1,100)                                          # Generates random number between 1 and 100 for desired distance
         # Get observation to return
         car_ob = self.turtlebot.get_observation()
-        time1 = time.time()
+        # time1 = time.time()
         x = car_ob[0] + des_dist*car_ob[2]
         y = car_ob[1] + des_dist*car_ob[3]
         self.goal = (x, y)
