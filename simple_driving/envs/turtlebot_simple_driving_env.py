@@ -18,11 +18,11 @@ class SimpleDrivingEnv(gym.Env):
             low=np.array([-10, -10], dtype=np.float32),
             high=np.array([10, 10], dtype=np.float32))
         self.observation_space = gym.spaces.box.Box(
-            low=np.array([-10, -10, -1, -1, -5, -5, -10, -10, 0], dtype=np.float32),
-            high=np.array([10, 10, 1, 1, 5, 5, 10, 10, math.inf], dtype=np.float32))
+            low=np.array([-10, -10, -1, -1, -5, -5, -10, -10], dtype=np.float32),
+            high=np.array([10, 10, 1, 1, 5, 5, 10, 10], dtype=np.float32))
         self.np_random, _ = gym.utils.seeding.np_random()
 
-        self.client = p.connect(p.DIRECT)
+        self.client = p.connect(p.GUI)
         # Reduce length of episodes for RL algorithms
         p.setTimeStep(1/30, self.client)
         self.observation  = np.array([0,0,0,0])
@@ -52,6 +52,7 @@ class SimpleDrivingEnv(gym.Env):
         currect_orientation = np.arctan(car_ob[2]/car_ob[3])
         current_velocity = math.sqrt(((car_ob[4])**2)+(car_ob[5])**2)
         current_robot_goal_relative_pos = tuple(map(lambda i, j: i - j, self.goal, car_ob[0:2])) # self.goal - car_ob[0:2]
+
         """ REWARDS DURING THE EPISODE
          rew1: positive reward if the robot moves towards goal
          rew2: penalty if the robot moves away from goal
@@ -64,13 +65,16 @@ class SimpleDrivingEnv(gym.Env):
         if (car_ob[0] >= 10 or car_ob[0] <= -10 or
             car_ob[1] >= 10 or car_ob[1] <= -10):
             reward = -50
+            print("out of plane")
             self.done = True
         # Done by reaching goal
         elif dist_to_goal < 0.05:       #Should we add maximum episode length as termination criteria?
             self.done = True
+            print("successful")
             reward = 50
         # Rewards during the episode
         else:
+            
             rew1 = (self.prev_dist_to_goal - dist_to_goal)*(dist_to_goal-self.prev_dist_to_goal<0)
             rew2 = -(dist_to_goal-self.prev_dist_to_goal)*(dist_to_goal-self.prev_dist_to_goal>0)
             rew3 = -(np.absolute(self.initial_orientation - currect_orientation))
@@ -79,6 +83,7 @@ class SimpleDrivingEnv(gym.Env):
                 # rew4 = skewed_gaussian_reward?
             rew5 = 1*(sum(tuple(ele1*ele2 for ele1,ele2 in zip(current_robot_goal_relative_pos,self.prev_robot_goal_relative_pos))))
             reward = rew1 + rew2 + rew3 + rew4 + rew5
+            # print("during episode",dist_to_goal, reward)
         self.prev_dist_to_goal = dist_to_goal
         # self.prev_orientation = currect_orientation
         self.prev_velocity = current_velocity
@@ -103,7 +108,7 @@ class SimpleDrivingEnv(gym.Env):
 
         # Set the goal at a distance "des_dist" along its orientation
         des_dist = 1
-        # des_dist = random.uniform(1,100)                                          # Generates random number between 1 and 100 for desired distance
+        # des_dist = random.uniform(1,10)                                          # Generates random number between 1 and 10 - for desired distance
         # Get observation to return
         car_ob = self.turtlebot.get_observation()
         # time1 = time.time()

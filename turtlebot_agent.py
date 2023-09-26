@@ -288,8 +288,9 @@ class TRPOAgent:
             # Print information if verbose
             if verbose:
                 num_episode = recording['num_episodes_in_iteration'][-1]
+                print("epi: ",num_episode)
                 avg = (round(sum(recording['episode_reward'][-num_episode:-1])
-                             / (num_episode - 1), 3))
+                             / (num_episode + 1), 3))
                 print(f'Average Reward over Iteration {iteration}: {avg}')
             # Optimize after batch
             self.optimize()

@@ -21,9 +21,11 @@ class TurtleBot:
 
     def apply_action(self, action):
         # Expects action to be two dimensional
+        
         leftWheelVelocity,rightWheelVelocity = action[0],action[1]
+        # print("action: ",leftWheelVelocity,rightWheelVelocity)
         p.setJointMotorControlArray(self.turtle,[1,2],p.VELOCITY_CONTROL, targetVelocities=[leftWheelVelocity,rightWheelVelocity],forces=[1000,1000])
-
+        # p.stepSimulation()
     def get_observation(self):
         # Get the position and orientation of the car in the simulation
         pos, ang = p.getBasePositionAndOrientation(self.turtle, self.client)
