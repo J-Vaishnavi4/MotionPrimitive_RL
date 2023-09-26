@@ -6,8 +6,8 @@ p.connect(p.GUI)
 p.setGravity(0,0,-10)
 offset = [0,0,0]
 
-turtle = p.loadURDF('/home/vaishnavi/Documents/IISc/Car-Plane robot_RL/Gym-Medium-Post/turtlebot3_description/urdf/turtlebot3_burger.urdf.xacro',offset)
-plane = p.loadURDF('/home/vaishnavi/Documents/IISc/Car-Plane robot_RL/Gym-Medium-Post/simple_driving/resources/simpleplane.urdf')
+turtle = p.loadURDF('/home/vaishnavi/Documents/IISc/Car-Plane robot_RL/MotionPrimitive_RL/turtlebot3_description/urdf/Edit_turtlebot3_burger.urdf.xacro',offset)
+plane = p.loadURDF('/home/vaishnavi/Documents/IISc/Car-Plane robot_RL/MotionPrimitive_RL/simple_driving/resources/simpleplane.urdf')
 p.setRealTimeSimulation(1)
 
 for j in range (p.getNumJoints(turtle)):
