@@ -41,6 +41,10 @@ class SimpleDrivingEnv(gym.Env):
 
     def step(self, action):
         # Feed action to the car and get observation of car's state
+        # for i in range(4):
+        #     # print("i: ",i)
+        #     action = [100*math.cos(i/2),100*math.cos(i/2)]
+        #     self.turtlebot.apply_action(action)
         self.turtlebot.apply_action(action)
         p.stepSimulation()
         car_ob = self.turtlebot.get_observation()
@@ -74,7 +78,7 @@ class SimpleDrivingEnv(gym.Env):
             reward = 50
         # Rewards during the episode
         else:
-            
+
             rew1 = (self.prev_dist_to_goal - dist_to_goal)*(dist_to_goal-self.prev_dist_to_goal<0)
             rew2 = -(dist_to_goal-self.prev_dist_to_goal)*(dist_to_goal-self.prev_dist_to_goal>0)
             rew3 = -(np.absolute(self.initial_orientation - currect_orientation))
@@ -117,7 +121,7 @@ class SimpleDrivingEnv(gym.Env):
         self.goal = (x, y)
         self.done = False
         # Visual element of the goal
-        Goal(self.client, self.goal)
+        # Goal(self.client, self.goal)
 
         self.prev_dist_to_goal = math.sqrt(((car_ob[0] - self.goal[0]) ** 2 +
                                            (car_ob[1] - self.goal[1]) ** 2))
@@ -127,7 +131,7 @@ class SimpleDrivingEnv(gym.Env):
         self.prev_robot_goal_relative_pos = tuple(map(lambda i, j: i - j, self.goal, car_ob[0:2])) #self.goal - car_ob[0:2]
         # return np.array((car_ob + self.goal)+ tuple([time1 - self.start_time])), {}           # dictionary to keep additional info as per stable_baselines3
         return np.array((car_ob + self.goal)) # + tuple([time1 - self.start_time]))
-    
+
     def render(self, mode='human'):
         if self.rendered_img is None:
             self.rendered_img = plt.imshow(np.zeros((100, 100, 4)))
