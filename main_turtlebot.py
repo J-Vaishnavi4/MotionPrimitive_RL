@@ -11,7 +11,7 @@ def main():
                              torch.nn.Linear(64, 2))
     agent = TRPOAgent(policy=nn)
 
-    agent.train("turtlebot_env", seed=0, batch_size=5000, iterations=10,
+    agent.train("turtlebot_env", seed=0, batch_size=5000, iterations=100,
                 max_episode_length=10000, verbose=True)
     agent.save_model("agent_turtlebot.pth")
     agent.load_model("agent_turtlebot.pth")
