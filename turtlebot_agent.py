@@ -2,7 +2,7 @@
 File holds self contained TRPO agent.
 """
 import torch
-import gym
+import gymnasium as gym
 import numpy as np
 from numpy.random import choice
 from copy import deepcopy
@@ -255,6 +255,7 @@ class TRPOAgent:
 
             for step in range(batch_size):
                 # Take step with agent
+                # print("action: ",self(observation))
                 observation, reward, done, _ = env.step(self(observation))
 
                 # Recording, increment episode values
@@ -295,6 +296,7 @@ class TRPOAgent:
             # Optimize after batch
             self.optimize()
 
+        # print(recording)
         env.close()
         # Return recording information
         return recording

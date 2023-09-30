@@ -1,19 +1,27 @@
-from stable_baselines3 import TD3, PPO, HerReplayBuffer, TRPO
+from stable_baselines3 import TD3, PPO, HerReplayBuffer
+from sb3_contrib import TRPO
 from stable_baselines3.her.goal_selection_strategy import GoalSelectionStrategy
 from stable_baselines3.common.evaluation import evaluate_policy
-import gym
+import gymnasium as gym
 import numpy as np
-from Wrapper import Wrapper
+from gymnasium.envs.registration import register
+from simple_driving.envs import sb3_turtlebot_simple_driving_env
 
+# register(
+#         id="TurtlebotEnv-v0",
+#         entry_point="simple_driving.envs.turtlebot_simple_driving_env:SimpleDrivingEnv",
+#     )
+# env = gym.make("TurtlebotEnv-v0")
+env = sb3_turtlebot_simple_driving_env.SimpleDrivingEnv()
 model_class = TRPO
-env = Wrapper(gym.make("turtlebot-v0", max_episode_steps = 500))
+# env = Wrapper(gym.make("turtlebot-v0", max_episode_steps = 500))
 
-model = model_class("MultiInputPolicy", env, verbose=0)
+model = model_class("MlpPolicy", env, verbose=1)
 
 best = -100
 plot_reward = []
-for i in range(400):
-    model.learn(total_timesteps = 5000)
+for i in range(20):
+    model.learn(total_timesteps = 100)
     temp = evaluate_policy(model, model.env, n_eval_episodes = 5)
     print("reward: ", temp,flush=True)
     plot_reward.append(temp)
