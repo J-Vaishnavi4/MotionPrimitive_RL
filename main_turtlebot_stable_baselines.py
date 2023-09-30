@@ -5,7 +5,7 @@ from stable_baselines3.common.evaluation import evaluate_policy
 import gymnasium as gym
 import numpy as np
 from gymnasium.envs.registration import register
-import sb3_turtlebot_simple_driving_env
+# import sb3_turtlebot_simple_driving_env
 
 register(
         id="TurtlebotEnv-v0",
@@ -19,8 +19,8 @@ model = model_class("MlpPolicy", env, verbose=1)
 
 best = -100
 plot_reward = []
-for i in range(20):
-    model.learn(total_timesteps = 100)
+for i in range(30):
+    model.learn(total_timesteps = 1000)
     temp = evaluate_policy(model, model.env, n_eval_episodes = 5)
     print("reward: ", temp,flush=True)
     plot_reward.append(temp)

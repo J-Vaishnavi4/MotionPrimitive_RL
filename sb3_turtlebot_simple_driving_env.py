@@ -35,7 +35,7 @@ class SimpleDrivingEnv(gym.Env):
     def get_observations(self):
         pos, ang = p.getBasePositionAndOrientation(self.turtle, self.client)
         ang = p.getEulerFromQuaternion(ang)
-        ori = (math.cos(ang[2]), math.sin(ang[2]))
+        ori = (math.cos(ang[2]), math.sin(ang[2]))                          # ang[2] is yaw (orientation)
         pos = pos[:2]                                                       # Position- X, Y
         # Get the velocity of the car
         vel = p.getBaseVelocity(self.turtle, self.client)[0][0:2]           # Velocities- Vx, Vy
@@ -53,20 +53,20 @@ class SimpleDrivingEnv(gym.Env):
         lin_vel = min(max(lin_vel, 0), 1)
         ang_vel = max(min(ang_vel, 0.6), -0.6)
 
-        rightWheelVelocity = (2*lin_vel + ang_vel*L)/(2*R)
-        leftWheelVelocity = (2*lin_vel - ang_vel*L)/(2*R)
+        rightWheelVelocity = 2 #(2*lin_vel + ang_vel*L)/(2*R)
+        leftWheelVelocity = 2 #(2*lin_vel - ang_vel*L)/(2*R)
 
         # print("action: ",leftWheelVelocity,rightWheelVelocity)
-        p.setJointMotorControlArray(self.turtle,[1,2],p.VELOCITY_CONTROL, targetVelocities=[leftWheelVelocity,rightWheelVelocity],forces=[10,10])
+        p.setJointMotorControlArray(self.turtle,[1,2],p.VELOCITY_CONTROL, targetVelocities=[leftWheelVelocity,rightWheelVelocity],forces=[10,100])
 
         p.stepSimulation()
         # Get the position and orientation of the car in the simulation
         turtle_ob = self.get_observations()
-        
+        # print("orientation: ",math.atan(turtle_ob[3]/turtle_ob[2]))
         # Compute reward as L2 change in distance to goal
         dist_to_goal = math.sqrt(((turtle_ob[0] - self.goal[0]) ** 2 +
                                   (turtle_ob[1] - self.goal[1]) ** 2))
-        currect_orientation = np.arctan(turtle_ob[2]/turtle_ob[3])
+        currect_orientation = np.arctan(turtle_ob[3]/turtle_ob[2])
         current_velocity = math.sqrt(((turtle_ob[4])**2)+(turtle_ob[5])**2)
         current_robot_goal_relative_pos = tuple(map(lambda i, j: i - j, self.goal, turtle_ob[0:2])) # self.goal - turtle_ob[0:2]
 
@@ -102,11 +102,10 @@ class SimpleDrivingEnv(gym.Env):
             reward = rew1 + rew2 + rew3 + rew4 + rew5
             # print("during episode",dist_to_goal, reward)
         self.prev_dist_to_goal = dist_to_goal
-        # self.prev_orientation = currect_orientation
         self.prev_velocity = current_velocity
         self.prev_robot_goal_relative_pos = current_robot_goal_relative_pos
         # states = turtle_ob[2:], dist_to_goal,
-        states = np.array((turtle_ob + self.goal))# + tuple([time1-self.start_time]))         #need to keep states as dist_to_goal, velocities and time(?)
+        states = np.array((turtle_ob + self.goal))         #Should we keep states as dist_to_goal, orientation, velocities
         truncated = self.done
         info = {}
         return states, reward, self.done, truncated, info
@@ -123,19 +122,19 @@ class SimpleDrivingEnv(gym.Env):
         offset = [0,0,0.5]
         self.turtle = p.loadURDF('/home/vaishnavi/Documents/IISc/Car-Plane robot_RL/MotionPrimitive_RL/turtlebot3_description/urdf/Edit_turtlebot3_burger.urdf.xacro',offset)
         self.plane = p.loadURDF('/home/vaishnavi/Documents/IISc/Car-Plane robot_RL/MotionPrimitive_RL/simpleplane.urdf')
-        p.setRealTimeSimulation(1)
+        # p.setRealTimeSimulation(1)
         self.wheel_joints = [1, 2]
         # Joint speed
         self.joint_speed = 0
         # self.turtlebot = TurtleBot(self.client)
 
         # Set the goal at a distance "des_dist" along its orientation
-        # des_dist = 1
         des_dist = random.uniform(1,10)                                          # Generates random number between 1 and 10 - for desired distance
         # Get observation to return
         turtle_ob = self.get_observations()
-        x = turtle_ob[0] + des_dist*turtle_ob[2]
-        y = turtle_ob[1] + des_dist*turtle_ob[3]
+        print("orientation: ",math.atan(turtle_ob[3]/turtle_ob[2]))
+        x = 5#turtle_ob[0] + des_dist*turtle_ob[2]
+        y = 0#turtle_ob[1] + des_dist*turtle_ob[3]
         self.goal = (x, y)
         self.done = False
         # Visual element of the goal
@@ -149,7 +148,6 @@ class SimpleDrivingEnv(gym.Env):
         self.prev_robot_goal_relative_pos = tuple(map(lambda i, j: i - j, self.goal, turtle_ob[0:2])) #self.goal - turtle_ob[0:2]
         info = {}
         return np.array((turtle_ob + self.goal)), info           # dictionary to keep additional info as per stable_baselines3
-        # return np.array((turtle_ob + self.goal)) # + tuple([time1 - self.start_time]))
 
     def render(self, mode='human'):
         if self.rendered_img is None:
