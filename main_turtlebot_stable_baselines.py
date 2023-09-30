@@ -5,16 +5,15 @@ from stable_baselines3.common.evaluation import evaluate_policy
 import gymnasium as gym
 import numpy as np
 from gymnasium.envs.registration import register
-from simple_driving.envs import sb3_turtlebot_simple_driving_env
+import sb3_turtlebot_simple_driving_env
 
-# register(
-#         id="TurtlebotEnv-v0",
-#         entry_point="simple_driving.envs.turtlebot_simple_driving_env:SimpleDrivingEnv",
-#     )
-# env = gym.make("TurtlebotEnv-v0")
-env = sb3_turtlebot_simple_driving_env.SimpleDrivingEnv()
+register(
+        id="TurtlebotEnv-v0",
+        entry_point="sb3_turtlebot_simple_driving_env:SimpleDrivingEnv",
+    )
+env = gym.make("TurtlebotEnv-v0")
+# env = sb3_turtlebot_simple_driving_env.SimpleDrivingEnv()
 model_class = TRPO
-# env = Wrapper(gym.make("turtlebot-v0", max_episode_steps = 500))
 
 model = model_class("MlpPolicy", env, verbose=1)
 
