@@ -1,7 +1,0 @@
-README.md
-setup.py
-simple_driving.egg-info/PKG-INFO
-simple_driving.egg-info/SOURCES.txt
-simple_driving.egg-info/dependency_links.txt
-simple_driving.egg-info/requires.txt
-simple_driving.egg-info/top_level.txt
