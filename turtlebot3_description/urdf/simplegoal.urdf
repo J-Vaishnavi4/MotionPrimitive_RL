@@ -9,15 +9,15 @@
     <link name="base_link">
         <visual>
             <geometry>
-                <cylinder radius="0.5" length="1"/>
+                <cylinder radius="0.01" length="1"/>
                 <origin rpy="0 0 0" xyz="0 0 0.5"/>
             </geometry>
             <material name="green"/>
         </visual>
         <collision> 
              <geometry> 
-                <cylinder radius="0.25" length="0.5"/>
-                <origin rpy="0 0 0" xyz="0 0 0.25"/>
+                <cylinder radius="0.01" length="1"/>
+                <origin rpy="0 0 0" xyz="0 0 0.5"/>
             </geometry>
         </collision> 
         <inertial> 
