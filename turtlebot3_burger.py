@@ -13,7 +13,7 @@ class TurtleBot3:
         self.reset()
 
     def reset(self):
-        robot = self._p.loadURDF('/home/tushar-20-msi/turtlebot_stable_baseline/turtlebot3_description/urdf/turtlebot3_burger.urdf.xacro',[0,0,0])
+        robot = self._p.loadURDF('/home/vaishnavi/Documents/IISc/Car-Plane robot_RL/MotionPrimitive_RL/turtlebot3_description/urdf/turtlebot3_burger.urdf.xacro',[0,0,0])
         #plane = self._p.loadURDF("plane_transparent.urdf")
         # plane = self._p.loadURDF('/home/tushar-20-msi/turtlebot_stable_baseline/turtlebot3_description/urdf/simpleplane.urdf')
 
