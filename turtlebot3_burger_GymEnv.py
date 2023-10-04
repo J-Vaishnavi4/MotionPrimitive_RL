@@ -43,7 +43,7 @@ class turtlebot3_burger_GymEnv(gym.Env):
     self._cam_yaw = 50
     self._cam_pitch = -35
     if self._renders:
-      self._p = bc.BulletClient(connection_mode=pybullet.DIRECT)
+      self._p = bc.BulletClient(connection_mode=pybullet.GUI)
     else:
       self._p = bc.BulletClient()
 
@@ -80,8 +80,8 @@ class turtlebot3_burger_GymEnv(gym.Env):
     # ballx = dist * math.sin(ang)
     # bally = dist * math.cos(ang)
     # ballz = 1
-    self._p.loadURDF('/home/tushar-20-msi/turtlebot_stable_baseline/turtlebot3_description/urdf/simpleplane.urdf')
-    self._goalUniqueId = self._p.loadURDF('/home/tushar-20-msi/turtlebot_stable_baseline/turtlebot3_description/urdf/simplegoal.urdf', [1, 0, 0])
+    self._p.loadURDF('/home/vaishnavi/Documents/IISc/Car-Plane robot_RL/MotionPrimitive_RL/turtlebot3_description/urdf/simpleplane.urdf')
+    self._goalUniqueId = self._p.loadURDF('/home/vaishnavi/Documents/IISc/Car-Plane robot_RL/MotionPrimitive_RL/turtlebot3_description/urdf/simplegoal.urdf', [2, 0, 0])
     self._p.setGravity(0, 0, -10)
     self._robot = turtlebot3_burger.TurtleBot3(self._p, urdfRootPath=self._urdfRoot, timeStep=self._timeStep)
     self._envStepCounter = 0
@@ -135,7 +135,7 @@ class turtlebot3_burger_GymEnv(gym.Env):
     for i in range(self._actionRepeat):
       self._p.stepSimulation()
       #if self._renders:
-      #  time.sleep(self._timeStep)
+      time.sleep(self._timeStep)
       self._observation = self.getExtendedObservation()
       #print(self._observation)
 
