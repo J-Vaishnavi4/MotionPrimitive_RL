@@ -30,7 +30,7 @@ class turtlebot3_burger_GymEnv(gym.Env):
                isDiscrete=False,
                renders=False):
     #print("init")
-    self._timeStep = 0.01
+    self._timeStep = 0.001
     self._urdfRoot = urdfRoot
     self._actionRepeat = actionRepeat
     self._isEnableSelfCollision = isEnableSelfCollision
@@ -43,7 +43,7 @@ class turtlebot3_burger_GymEnv(gym.Env):
     self._cam_yaw = 50
     self._cam_pitch = -35
     if self._renders:
-      self._p = bc.BulletClient(connection_mode=pybullet.GUI)
+      self._p = bc.BulletClient(connection_mode=pybullet.DIRECT)
     else:
       self._p = bc.BulletClient()
 
@@ -80,8 +80,9 @@ class turtlebot3_burger_GymEnv(gym.Env):
     # ballx = dist * math.sin(ang)
     # bally = dist * math.cos(ang)
     # ballz = 1
+    self.offset_to_goal = [1, 0, 0]
     self._p.loadURDF('/home/vaishnavi/Documents/IISc/Car-Plane robot_RL/MotionPrimitive_RL/turtlebot3_description/urdf/simpleplane.urdf')
-    self._goalUniqueId = self._p.loadURDF('/home/vaishnavi/Documents/IISc/Car-Plane robot_RL/MotionPrimitive_RL/turtlebot3_description/urdf/simplegoal.urdf', [2, 0, 0])
+    self._goalUniqueId = self._p.loadURDF('/home/vaishnavi/Documents/IISc/Car-Plane robot_RL/MotionPrimitive_RL/turtlebot3_description/urdf/simplegoal.urdf', self.offset_to_goal)
     self._p.setGravity(0, 0, -10)
     self._robot = turtlebot3_burger.TurtleBot3(self._p, urdfRootPath=self._urdfRoot, timeStep=self._timeStep)
     self._envStepCounter = 0
@@ -112,7 +113,7 @@ class turtlebot3_burger_GymEnv(gym.Env):
     if (self._renders):
       basePos, orn = self._p.getBasePositionAndOrientation(self._robot.robotUniqueId)
       #self._p.resetDebugVisualizerCamera(1, 30, -40, basePos)
-      d = (abs(np.asarray(basePos)[0] - np.asarray(self._p.getBasePositionAndOrientation(self._goalUniqueId)[0])))
+      d = (abs(np.asarray(basePos)[0] - np.asarray(self.offset_to_goal)))
       self.prev_dist_to_goal = math.sqrt(math.pow(d[0],2) + math.pow(d[1],2))
       self.prev_dist_orn = self._p.getEulerFromQuaternion(orn)[2]
       self.prev_vel = self._p.getBaseVelocity(self._robot.robotUniqueId)[0]
@@ -173,24 +174,28 @@ class turtlebot3_burger_GymEnv(gym.Env):
 
   def _termination(self):
     #closestPoints = self._p.getClosestPoints(self._robot.robotUniqueId, self._goalUniqueId,10000)
-    d = (abs(np.asarray(self._p.getBasePositionAndOrientation(self._robot.robotUniqueId)[0]) - np.asarray(self._p.getBasePositionAndOrientation(self._goalUniqueId)[0])))
-    dist = math.pow(d[0],2) + math.pow(d[1],2) + math.pow(d[2],2)
+    d = (abs(np.asarray(self._p.getBasePositionAndOrientation(self._robot.robotUniqueId)[0]) - np.asarray(self.offset_to_goal)))
+    dist = math.sqrt(math.pow(d[0],2) + math.pow(d[1],2))
+    # print("dist: ",dist)
     yaw = self._p.getEulerFromQuaternion(self._p.getBasePositionAndOrientation(self._robot.robotUniqueId)[1])[2]
-    return self._envStepCounter > 10000 or dist < 0.01 or dist > 1.2 or  yaw > 0.5 or yaw < -0.5
+    return self._envStepCounter > 10000 or dist<=0.001 or dist > 1.2 or  yaw > 0.5 or yaw < -0.5
 
   def _reward(self):
     # closestPoints = self._p.getClosestPoints(self._robot.robotUniqueId, self._ballUniqueId,
     #                                          10000)
-    d = (abs(np.asarray(self._p.getBasePositionAndOrientation(self._robot.robotUniqueId)[0]) - np.asarray(self._p.getBasePositionAndOrientation(self._goalUniqueId)[0])))
-    dist_to_goal = math.sqrt(math.pow(d[0],2) + math.pow(d[1],2) + math.pow(d[2],2))
+    d = (abs(np.asarray(self._p.getBasePositionAndOrientation(self._robot.robotUniqueId)[0]) - np.asarray(self.offset_to_goal)))
+    dist_to_goal = math.sqrt(math.pow(d[0],2) + math.pow(d[1],2))
     # print("after action")
     # print(dist_to_goal)
 
     yaw = self._p.getEulerFromQuaternion(self._p.getBasePositionAndOrientation(self._robot.robotUniqueId)[1])[2]
+    # r = abs(np.asarray(self._p.getBasePositionAndOrientation(self._robot.robotUniqueId)[0]))
+    theta = math.acos(np.dot(self._p.getBasePositionAndOrientation(self._robot.robotUniqueId)[0],self.offset_to_goal)/(np.linalg.norm(self.offset_to_goal)*np.linalg.norm(self._p.getBasePositionAndOrientation(self._robot.robotUniqueId)[0])))
+    lateral_deviation = abs(math.sin(theta))*np.linalg.norm(self._p.getBasePositionAndOrientation(self._robot.robotUniqueId)[0])
     lV, aV = self._p.getBaseVelocity(self._robot.robotUniqueId)
     
 
-    if (dist_to_goal<=0.01):
+    if (dist_to_goal<=0.02):
       print("reached")
       reward = 500
 
@@ -200,7 +205,8 @@ class turtlebot3_burger_GymEnv(gym.Env):
       rew2 = -100*abs(yaw)
       rew3 = 0*(dist_to_goal < 0.2 and (0,0,0)<lV < self.prev_vel) 
       rew4 = -50 *(lV<(0,0,0))
-      reward = rew1 + rew2 + rew3 
+      rew5 = -10*lateral_deviation
+      reward = rew1 + rew2 + rew3 + rew5 
 
     #print(reward)
     return reward
