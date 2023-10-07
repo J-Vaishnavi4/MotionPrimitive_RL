@@ -14,12 +14,12 @@
             </geometry>
             <material name="green"/>
         </visual>
-        <collision> 
+        <!-- <collision> 
              <geometry> 
-                <cylinder radius="0.01" length="1"/>
+                <cylinder radius="0.001" length="0.001"/>
                 <origin rpy="0 0 0" xyz="0 0 0.5"/>
             </geometry>
-        </collision> 
+        </collision>  -->
         <inertial> 
             <mass value="0"/>
             <inertia ixx="0" ixy="0" ixz="0" iyy="0" iyz="0" izz="0"/>
