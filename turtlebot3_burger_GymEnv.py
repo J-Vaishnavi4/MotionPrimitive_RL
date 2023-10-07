@@ -43,13 +43,13 @@ class turtlebot3_burger_GymEnv(gym.Env):
     self._cam_yaw = 50
     self._cam_pitch = -35
     if self._renders:
-      self._p = bc.BulletClient(connection_mode=pybullet.DIRECT)
+      self._p = bc.BulletClient(connection_mode=pybullet.GUI)
     else:
       self._p = bc.BulletClient()
 
     self.seed()
     #self.reset()
-    observationDim = 14 
+    observationDim = 14
     observation_high = np.ones(observationDim) * 100  #np.inf
     if (isDiscrete):
       self.action_space = spaces.Discrete(9)
@@ -81,8 +81,8 @@ class turtlebot3_burger_GymEnv(gym.Env):
     # bally = dist * math.cos(ang)
     # ballz = 1
     self.offset_to_goal = [1, 0, 0]
-    self._p.loadURDF('/home/vaishnavi/Documents/IISc/Car-Plane robot_RL/MotionPrimitive_RL/turtlebot3_description/urdf/simpleplane.urdf')
-    self._goalUniqueId = self._p.loadURDF('/home/vaishnavi/Documents/IISc/Car-Plane robot_RL/MotionPrimitive_RL/turtlebot3_description/urdf/simplegoal.urdf', self.offset_to_goal)
+    self._p.loadURDF(currentdir+'/turtlebot3_description/urdf/simpleplane.urdf')
+    self._goalUniqueId = self._p.loadURDF(currentdir+'/turtlebot3_description/urdf/simplegoal.urdf', self.offset_to_goal)
     self._p.setGravity(0, 0, -10)
     self._robot = turtlebot3_burger.TurtleBot3(self._p, urdfRootPath=self._urdfRoot, timeStep=self._timeStep)
     self._envStepCounter = 0
@@ -193,7 +193,7 @@ class turtlebot3_burger_GymEnv(gym.Env):
     theta = math.acos(np.dot(self._p.getBasePositionAndOrientation(self._robot.robotUniqueId)[0],self.offset_to_goal)/(np.linalg.norm(self.offset_to_goal)*np.linalg.norm(self._p.getBasePositionAndOrientation(self._robot.robotUniqueId)[0])))
     lateral_deviation = abs(math.sin(theta))*np.linalg.norm(self._p.getBasePositionAndOrientation(self._robot.robotUniqueId)[0])
     lV, aV = self._p.getBaseVelocity(self._robot.robotUniqueId)
-    
+
 
     if (dist_to_goal<=0.02):
       print("reached")
@@ -203,10 +203,10 @@ class turtlebot3_burger_GymEnv(gym.Env):
       rew1 = 100*(self.prev_dist_to_goal - dist_to_goal)
       #print(yaw)
       rew2 = -100*abs(yaw)
-      rew3 = 0*(dist_to_goal < 0.2 and (0,0,0)<lV < self.prev_vel) 
+      rew3 = 0*(dist_to_goal < 0.2 and (0,0,0)<lV < self.prev_vel)
       rew4 = -50 *(lV<(0,0,0))
       rew5 = -10*lateral_deviation
-      reward = rew1 + rew2 + rew3 + rew5 
+      reward = rew1 + rew2 + rew3 + rew5
 
     #print(reward)
     return reward

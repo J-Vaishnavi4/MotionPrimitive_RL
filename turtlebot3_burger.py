@@ -1,6 +1,7 @@
 import os
 import copy
 import math
+currentdir = os.path.dirname(__file__)
 
 import numpy as np
 
@@ -13,7 +14,7 @@ class TurtleBot3:
         self.reset()
 
     def reset(self):
-        robot = self._p.loadURDF('/home/vaishnavi/Documents/IISc/Car-Plane robot_RL/MotionPrimitive_RL/turtlebot3_description/urdf/turtlebot3_burger.urdf.xacro',[0,0,0])
+        robot = self._p.loadURDF(currentdir+'/turtlebot3_description/urdf/turtlebot3_burger.urdf.xacro',[0,0,0])
         #plane = self._p.loadURDF("plane_transparent.urdf")
         # plane = self._p.loadURDF('/home/tushar-20-msi/turtlebot_stable_baseline/turtlebot3_description/urdf/simpleplane.urdf')
 
@@ -21,7 +22,7 @@ class TurtleBot3:
 
         self.Wheels = [1,2] #1 is left 2 is right
         self.maxForce = 350
-        self.nMotors = 2 
+        self.nMotors = 2
         self.speedMultiplierRight = 0.5
         self.speedMultiplierLeft = 0.5
 
@@ -53,4 +54,3 @@ class TurtleBot3:
         targetVelocityLeft = (2*lin_vel - ang_vel*L)/(2*R) * self.speedMultiplierLeft
 
         self._p.setJointMotorControlArray(self.robotUniqueId,[1,2],self._p.VELOCITY_CONTROL, targetVelocities=[targetVelocityLeft,targetVelocityRight],forces=[self.maxForce,self.maxForce])
-
