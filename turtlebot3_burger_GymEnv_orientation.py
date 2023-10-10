@@ -4,10 +4,10 @@ parentdir = os.path.dirname(currentdir)
 os.sys.path.insert(0, parentdir)
 
 import math
-import gym
+import gymnasium as gym
 import time
-from gym import spaces
-from gym.utils import seeding
+from gymnasium import spaces
+from gymnasium.utils import seeding
 import numpy as np
 import pybullet
 import turtlebot3_burger
@@ -20,7 +20,7 @@ RENDER_HEIGHT = 720
 RENDER_WIDTH = 960
 
 
-class turtlebot3_burger_GymEnv(gym.Env):
+class turtlebot3_burger_GymEnv_orientation(gym.Env):
   metadata = {'render.modes': ['human', 'rgb_array'], 'video.frames_per_second': 50}
 
   def __init__(self,
@@ -43,7 +43,7 @@ class turtlebot3_burger_GymEnv(gym.Env):
     self._cam_yaw = 50
     self._cam_pitch = -35
     if self._renders:
-      self._p = bc.BulletClient(connection_mode=pybullet.GUI)
+      self._p = bc.BulletClient(connection_mode=pybullet.DIRECT)
     else:
       self._p = bc.BulletClient()
 
@@ -56,25 +56,28 @@ class turtlebot3_burger_GymEnv(gym.Env):
     else:
       action_dim = 2 #consider everything as list
       self._action_bound = 1
-      action_high = np.array([self._action_bound]*action_dim)
-      self.action_space = spaces.Box(np.array([0,-self._action_bound]), np.array([self._action_bound,self._action_bound]), dtype=np.float32)
+      # action_high = np.array([self._action_bound]*action_dim)
+      self.action_space = spaces.Box(np.array([0,-self._action_bound]), np.array([0,self._action_bound]), dtype=np.float32)
     self.observation_space = spaces.Box(-observation_high, observation_high, dtype=float)
     self.viewer = None
 
-  def reset(self):
+  def reset(self,seed = None):
     self._p.resetSimulation()
     #self._p.setPhysicsEngineParameter(numSolverIterations=300)
     self._p.setTimeStep(self._timeStep)
-    self.offset_to_goal = [0.7, 0, 0]
+    self._offset_to_goal = [0, 0, 0]
+    self._euler_orientation = [0, 0, -1*math.pi/3]
     self._p.loadURDF(currentdir+'/turtlebot3_description/urdf/simpleplane.urdf')
-    self._goalUniqueId = self._p.loadURDF(currentdir+'/turtlebot3_description/urdf/simplegoal.urdf', self.offset_to_goal)
+    self._goal_orientation = self._p.getQuaternionFromEuler(self._euler_orientation)
+    self._goalUniqueId = self._p.loadURDF(currentdir+'/turtlebot3_description/urdf/simplegoal.urdf', basePosition = self._offset_to_goal, baseOrientation = self._goal_orientation)
     self._p.setGravity(0, 0, -10)
     self._robot = turtlebot3_burger.TurtleBot3(self._p, urdfRootPath=self._urdfRoot, timeStep=self._timeStep)
     self._envStepCounter = 0
     for i in range(100):
       self._p.stepSimulation()
     self._observation = self.getExtendedObservation()
-    return np.array(self._observation)
+    info = {}
+    return np.array(self._observation),info
 
   def __del__(self):
     self._p = 0
@@ -98,13 +101,10 @@ class turtlebot3_burger_GymEnv(gym.Env):
     # print(action)
     if (self._renders):
       basePos, orn = self._p.getBasePositionAndOrientation(self._robot.robotUniqueId)
-      #self._p.resetDebugVisualizerCamera(1, 30, -40, basePos)
-      d = (abs(np.asarray(basePos)[0] - np.asarray(self.offset_to_goal)))
-      self.prev_dist_to_goal = math.sqrt(math.pow(d[0],2) + math.pow(d[1],2))
-      self.prev_dist_orn = self._p.getEulerFromQuaternion(orn)[2]
-      self.prev_vel = self._p.getBaseVelocity(self._robot.robotUniqueId)[0]
-      # print("before action")
-      # print(self.prev_dist_to_goal)
+      d = (abs(np.asarray(basePos)[0] - np.asarray(self._offset_to_goal)))
+      self.prev_orn = self._p.getEulerFromQuaternion(orn)[2]
+      self.prev_orn_diff = abs(self.prev_orn - self._euler_orientation[2])
+      self.prev_ang_vel = self._p.getBaseVelocity(self._robot.robotUniqueId)[1][2]    #ang vel about z-axis
 
     if (self._isDiscrete):
       rightVel = [-1, -0.5, -0.1, 0, 0.5, 0.1, 1, 0.2, 0.8]
@@ -118,19 +118,16 @@ class turtlebot3_burger_GymEnv(gym.Env):
     self._robot.applyAction(realaction[0],realaction[1])
     for i in range(self._actionRepeat):
       self._p.stepSimulation()
-      #if self._renders:
       time.sleep(self._timeStep)
       self._observation = self.getExtendedObservation()
-      #print(self._observation)
 
       if self._termination():
         break
       self._envStepCounter += 1
     reward = self._reward()
     done = self._termination()
-    #print("len=%r" % len(self._observation))
-
-    return np.array(self._observation), reward, done, {}
+    truncated = done
+    return np.array(self._observation), reward, done, truncated, {}
 
   def render(self, mode='human', close=False):
     if mode != "rgb_array":
@@ -156,49 +153,43 @@ class turtlebot3_burger_GymEnv(gym.Env):
     return rgb_array
 
   def _termination(self):
-    #closestPoints = self._p.getClosestPoints(self._robot.robotUniqueId, self._goalUniqueId,10000)
     robot_pos, robot_orn = self._p.getBasePositionAndOrientation(self._robot.robotUniqueId)
-    d = (abs(np.asarray(robot_pos) - np.asarray(self.offset_to_goal)))
-    dist = math.sqrt(math.pow(d[0],2) + math.pow(d[1],2))
-    # print("dist: ",dist)
+    # d = (abs(np.asarray(robot_pos) - np.asarray(self._offset_to_goal)))
+    # dist = math.sqrt(math.pow(d[0],2) + math.pow(d[1],2))
+    goal_orientation = self._euler_orientation[2]
     yaw = self._p.getEulerFromQuaternion(robot_orn)[2]
-    theta = math.acos(np.dot(robot_pos,self.offset_to_goal)/(np.linalg.norm(self.offset_to_goal)*np.linalg.norm(robot_pos)))
-    lateral_deviation = abs(math.sin(theta))*np.linalg.norm(robot_pos)
-    # if lateral_deviation>0.01:
-    #   print("deviated")
-    return self._envStepCounter > 10000 or dist<=0.02 or dist > 1.2 or  yaw > 0.25 or yaw < -0.25 #or lateral_deviation > 0.01
+    # print("yaw: ",yaw)
+    lV, aV = self._p.getBaseVelocity(self._robot.robotUniqueId)
+    return self._envStepCounter > 5000 or (aV[2]<=0.01 and abs(yaw - goal_orientation)<0.01) #or dist>=0.01 or abs(yaw - goal_orientation) <= 0.01
 
   def _reward(self):
-    # closestPoints = self._p.getClosestPoints(self._robot.robotUniqueId, self._ballUniqueId,
-    #                                          10000)
+
     robot_pos,robot_orn = self._p.getBasePositionAndOrientation(self._robot.robotUniqueId)
-    d = (abs(np.asarray(robot_pos) - np.asarray(self.offset_to_goal)))
+    d = (abs(np.asarray(robot_pos) - np.asarray(self._offset_to_goal)))
     dist_to_goal = math.sqrt(math.pow(d[0],2) + math.pow(d[1],2))
-    # print("after action")
-    # print(dist_to_goal)
-
+    goal_orientation = self._euler_orientation[2]
     yaw = self._p.getEulerFromQuaternion(robot_orn)[2]
-    # r = abs(np.asarray(self._p.getBasePositionAndOrientation(self._robot.robotUniqueId)[0]))
-    theta = math.acos(np.dot(robot_pos,self.offset_to_goal)/(np.linalg.norm(self.offset_to_goal)*np.linalg.norm(robot_pos)))
-    lateral_deviation = abs(math.sin(theta))*np.linalg.norm(robot_pos)
+    current_orn_diff = abs(yaw - goal_orientation)
+    # print(yaw - goal_orientation)
     lV, aV = self._p.getBaseVelocity(self._robot.robotUniqueId)
+    # if dist_to_goal!=0:
+    #   print("dist to goal:", dist_to_goal)
 
-
-    if (dist_to_goal<=0.02):
+    if (current_orn_diff<=0.01) and abs(aV[2]) < 0.1:
       print("reached")
-      reward = 5000
 
+    rew1 = -100*(dist_to_goal)                                    # penalizing linear displacement from initial position
+    rew2 = 100*(current_orn_diff<0.1)*(self.prev_ang_vel - aV[2])        # for reduction in angular velocity as it approaches goal orientation
+    rew3 = 100*(self.prev_orn_diff - current_orn_diff)            # positive reward for reduced orn difference
+    rew4 = 5000*((current_orn_diff<=0.01) and abs(aV[2]) < 0.1)   # reward when robot's orientation is close to goal and it's ang vel is small
+    # rew5 to account for clockwise and anti clockwise rotation of robot based on yaw and goal orientation 
+    if 0 < yaw - goal_orientation < math.pi or yaw-goal_orientation<-math.pi:                
+      rew5 =  -10*aV[2]
+    elif -math.pi < yaw - goal_orientation < 0 or yaw - goal_orientation >math.pi:
+      rew5 = 10*aV[2]
     else:
-      rew1 = 100*(self.prev_dist_to_goal - dist_to_goal)
-      #print(yaw)
-      rew2 = -100*abs(yaw)
-      rew3 = 0*(dist_to_goal < 0.2 and (0,0,0)<lV < self.prev_vel)
-      rew4 = 2*lV[0]
-      rew5 = -100*lateral_deviation
-      print(rew1,rew2,rew4,rew5)
-      reward = rew1 + rew2 + rew3 + rew4 + rew5
-
-    #print(reward)
+      rew5=0
+    reward = rew1 + rew2 + rew3 + rew4 + rew5
     return reward
 
   if parse_version(gym.__version__) < parse_version('0.9.6'):
