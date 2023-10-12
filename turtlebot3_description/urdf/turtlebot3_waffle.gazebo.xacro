@@ -28,9 +28,31 @@
     <maxVel>0.1</maxVel>
     <fdir1>1 0 0</fdir1>
     <material>Gazebo/FlatBlack</material>
+
+  </gazebo>
+    <gazebo reference="wheel_left_rear_link">
+    <mu1>0.1</mu1>
+    <mu2>0.1</mu2>
+    <kp>500000.0</kp>
+    <kd>10.0</kd>
+    <minDepth>0.001</minDepth>
+    <maxVel>0.1</maxVel>
+    <fdir1>1 0 0</fdir1>
+    <material>Gazebo/FlatBlack</material>
   </gazebo>
 
-  <gazebo reference="caster_back_right_link">
+  <gazebo reference="wheel_right_rear_link">
+    <mu1>0.1</mu1>
+    <mu2>0.1</mu2>
+    <kp>500000.0</kp>
+    <kd>10.0</kd>
+    <minDepth>0.001</minDepth>
+    <maxVel>0.1</maxVel>
+    <fdir1>1 0 0</fdir1>
+    <material>Gazebo/FlatBlack</material>
+  </gazebo>
+
+  <!-- <gazebo reference="caster_back_right_link">
     <mu1>0.1</mu1>
     <mu2>0.1</mu2>
     <kp>1000000.0</kp>
@@ -48,7 +70,7 @@
     <minDepth>0.001</minDepth>
     <maxVel>1.0</maxVel>
     <material>Gazebo/FlatBlack</material>
-  </gazebo>
+  </gazebo> -->
 
   <gazebo reference="imu_link">
     <sensor type="imu" name="imu">
@@ -59,7 +81,7 @@
   </gazebo>
 
   <gazebo>
-    <plugin name="turtlebot3_waffle_controller" filename="libgazebo_ros_diff_drive.so">
+    <plugin name="turtlebot3_waffle_controller" filename="libgazebo_ros_planar_move.so">
       <commandTopic>cmd_vel</commandTopic>
       <odometryTopic>odom</odometryTopic>
       <odometryFrame>odom</odometryFrame>
@@ -143,7 +165,7 @@
     </sensor>
   </gazebo>
 
-  <gazebo reference="camera_rgb_frame">
+  <!-- <gazebo reference="camera_rgb_frame">
     <sensor type="depth" name="realsense_R200">
       <always_on>true</always_on>
       <visualize>$(arg camera_visual)</visualize>
@@ -185,6 +207,6 @@
         <hackBaseline>0</hackBaseline>
       </plugin>
     </sensor>
-  </gazebo>
+  </gazebo> -->
 
 </robot>

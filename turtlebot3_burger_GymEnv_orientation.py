@@ -49,15 +49,15 @@ class turtlebot3_burger_GymEnv_orientation(gym.Env):
 
     self.seed()
     #self.reset()
-    observationDim = 14
-    observation_high = np.ones(observationDim) * 100  #np.inf
+    observationDim = 7
+    observation_high = np.ones(observationDim) * 10  #np.inf
     if (isDiscrete):
       self.action_space = spaces.Discrete(9)
     else:
       action_dim = 2 #consider everything as list
       self._action_bound = 1
-      # action_high = np.array([self._action_bound]*action_dim)
-      self.action_space = spaces.Box(np.array([0,-self._action_bound]), np.array([0,self._action_bound]), dtype=np.float32)
+      action_high = np.array([self._action_bound]*action_dim)
+      self.action_space = spaces.Box(-action_high, action_high, dtype=np.float32)
     self.observation_space = spaces.Box(-observation_high, observation_high, dtype=float)
     self.viewer = None
 
@@ -65,11 +65,11 @@ class turtlebot3_burger_GymEnv_orientation(gym.Env):
     self._p.resetSimulation()
     #self._p.setPhysicsEngineParameter(numSolverIterations=300)
     self._p.setTimeStep(self._timeStep)
-    self._offset_to_goal = [0, 0, 0]
-    self._euler_orientation = [0, 0, -1*math.pi/3]
+    self._robot_initial_pos = [0, 0, 0]
+    # self._euler_orientation = [0, 0, 0]
     self._p.loadURDF(currentdir+'/turtlebot3_description/urdf/simpleplane.urdf')
-    self._goal_orientation = self._p.getQuaternionFromEuler(self._euler_orientation)
-    self._goalUniqueId = self._p.loadURDF(currentdir+'/turtlebot3_description/urdf/simplegoal.urdf', basePosition = self._offset_to_goal, baseOrientation = self._goal_orientation)
+    # self._goal_orientation = self._p.getQuaternionFromEuler(self._euler_orientation)
+    # self._goalUniqueId = self._p.loadURDF(currentdir+'/turtlebot3_description/urdf/simplegoal.urdf', basePosition = self._robot_initial_pos, baseOrientation = self._goal_orientation)
     self._p.setGravity(0, 0, -10)
     self._robot = turtlebot3_burger.TurtleBot3(self._p, urdfRootPath=self._urdfRoot, timeStep=self._timeStep)
     self._envStepCounter = 0
@@ -88,22 +88,16 @@ class turtlebot3_burger_GymEnv_orientation(gym.Env):
 
   def getExtendedObservation(self):
     self._observation = self._robot.getObservation()
-    robotPos, robotOrn = self._p.getBasePositionAndOrientation(self._robot.robotUniqueId)
-    goalPos, goalOrn = self._p.getBasePositionAndOrientation(self._goalUniqueId)
-    invRobotPos, invRobotOrn = self._p.invertTransform(robotPos, robotOrn)
-    goalPosInRobot, goalOrnInRobot = self._p.multiplyTransforms(invRobotPos, invRobotOrn, goalPos, goalOrn)
-
-    self._observation.extend([goalPosInRobot[0], goalPosInRobot[1]])
-    # print(self._observation, type(ballPosInRobot[0]))
+    # print(self._observation)
     return self._observation
 
   def step(self, action):
     # print(action)
     if (self._renders):
       basePos, orn = self._p.getBasePositionAndOrientation(self._robot.robotUniqueId)
-      d = (abs(np.asarray(basePos)[0] - np.asarray(self._offset_to_goal)))
+      d = (abs(np.asarray(basePos)[0] - np.asarray(self._robot_initial_pos)))
       self.prev_orn = self._p.getEulerFromQuaternion(orn)[2]
-      self.prev_orn_diff = abs(self.prev_orn - self._euler_orientation[2])
+      # self.prev_orn_diff = abs(self.prev_orn - self._euler_orientation[2])
       self.prev_ang_vel = self._p.getBaseVelocity(self._robot.robotUniqueId)[1][2]    #ang vel about z-axis
 
     if (self._isDiscrete):
@@ -154,42 +148,37 @@ class turtlebot3_burger_GymEnv_orientation(gym.Env):
 
   def _termination(self):
     robot_pos, robot_orn = self._p.getBasePositionAndOrientation(self._robot.robotUniqueId)
-    # d = (abs(np.asarray(robot_pos) - np.asarray(self._offset_to_goal)))
-    # dist = math.sqrt(math.pow(d[0],2) + math.pow(d[1],2))
-    goal_orientation = self._euler_orientation[2]
-    yaw = self._p.getEulerFromQuaternion(robot_orn)[2]
+    d = (abs(np.asarray(robot_pos) - np.asarray(self._robot_initial_pos)))
+    displacement = math.sqrt(math.pow(d[0],2) + math.pow(d[1],2))
+    # goal_orientation = self._euler_orientation[2]
+    # yaw = self._p.getEulerFromQuaternion(robot_orn)[2]
     # print("yaw: ",yaw)
-    lV, aV = self._p.getBaseVelocity(self._robot.robotUniqueId)
-    return self._envStepCounter > 5000 or (aV[2]<=0.01 and abs(yaw - goal_orientation)<0.01) #or dist>=0.01 or abs(yaw - goal_orientation) <= 0.01
+    # lV, aV = self._p.getBaseVelocity(self._robot.robotUniqueId)
+    return displacement>=1 or self._envStepCounter>5000
+    # return self._envStepCounter>600
 
   def _reward(self):
 
     robot_pos,robot_orn = self._p.getBasePositionAndOrientation(self._robot.robotUniqueId)
-    d = (abs(np.asarray(robot_pos) - np.asarray(self._offset_to_goal)))
-    dist_to_goal = math.sqrt(math.pow(d[0],2) + math.pow(d[1],2))
-    goal_orientation = self._euler_orientation[2]
+    d = (abs(np.asarray(robot_pos) - np.asarray(self._robot_initial_pos)))
+    displacement = math.sqrt(math.pow(d[0],2) + math.pow(d[1],2))
     yaw = self._p.getEulerFromQuaternion(robot_orn)[2]
-    current_orn_diff = abs(yaw - goal_orientation)
-    # print(yaw - goal_orientation)
+    # current_orn_diff = abs(yaw - goal_orientation)
+    orn_change = yaw - self.prev_orn
+    # print(yaw)
     lV, aV = self._p.getBaseVelocity(self._robot.robotUniqueId)
     # if dist_to_goal!=0:
     #   print("dist to goal:", dist_to_goal)
 
-    if (current_orn_diff<=0.01) and abs(aV[2]) < 0.1:
+    if (orn_change>=2*math.pi) and abs(aV[2]) < 0.01:
       print("reached")
 
-    rew1 = -100*(dist_to_goal)                                    # penalizing linear displacement from initial position
-    rew2 = 100*(current_orn_diff<0.1)*(self.prev_ang_vel - aV[2])        # for reduction in angular velocity as it approaches goal orientation
-    rew3 = 100*(self.prev_orn_diff - current_orn_diff)            # positive reward for reduced orn difference
-    rew4 = 5000*((current_orn_diff<=0.01) and abs(aV[2]) < 0.1)   # reward when robot's orientation is close to goal and it's ang vel is small
-    # rew5 to account for clockwise and anti clockwise rotation of robot based on yaw and goal orientation 
-    if 0 < yaw - goal_orientation < math.pi or yaw-goal_orientation<-math.pi:                
-      rew5 =  -10*aV[2]
-    elif -math.pi < yaw - goal_orientation < 0 or yaw - goal_orientation >math.pi:
-      rew5 = 10*aV[2]
-    else:
-      rew5=0
-    reward = rew1 + rew2 + rew3 + rew4 + rew5
+    rew1 = -1000*(displacement)                                      # penalizing linear displacement from initial position
+    rew3 = 100*(orn_change)                                         # reward based on orientation change in anti-clockwise rotation
+    rew4 = 5000*(yaw==2*math.pi and abs(lV[0])+abs(lV[1]) < 0.01 and abs(aV[2]) < 0.01)   # reward when robot's orientation is close to goal and it's ang vel is small
+    
+    reward = rew1 + rew3 + rew4
+    # print(reward)
     return reward
 
   if parse_version(gym.__version__) < parse_version('0.9.6'):

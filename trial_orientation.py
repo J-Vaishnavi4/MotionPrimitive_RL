@@ -5,10 +5,10 @@ import os, inspect
 currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
 
 p.connect(p.GUI)
-offset = [0,2,0]
+offset = [0,0,0]
 
-turtle1 = p.loadURDF(currentdir+'/turtlebot3_description/urdf/turtlebot3_burger.urdf.xacro',\
-					basePosition=offset, baseOrientation=p.getQuaternionFromEuler([0, 0, math.pi/2.0]))
+turtle1 = p.loadURDF(currentdir+'/turtlebot3_description/urdf/turtlebot3_waffle.urdf.xacro',\
+					basePosition=offset, baseOrientation=p.getQuaternionFromEuler([0, 0, 0]))
 # turtle2 = p.loadURDF(currentdir+'/turtlebot3_description/urdf/turtlebot3_burger.urdf.xacro',\
 # 					basePosition=[0,0,0], baseOrientation=p.getQuaternionFromEuler([0, 0, 0]))
 plane = p.loadURDF(currentdir+'/turtlebot3_description/urdf/simpleplane.urdf')
@@ -70,6 +70,6 @@ while (1):
 	p.stepSimulation()
 	robot_pos, robot_orn = p.getBasePositionAndOrientation(turtle1)
 	yaw = p.getEulerFromQuaternion(robot_orn)[2]
-	print(yaw)
+	# print(yaw)
 	#p.setJointMotorControl2(turtle,1,p.VELOCITY_CONTROL,targetVelocity=leftWheelVelocity,force=1000)
 	#p.setJointMotorControl2(turtle,2,p.VELOCITY_CONTROL,targetVelocity=rightWheelVelocity,force=1000)

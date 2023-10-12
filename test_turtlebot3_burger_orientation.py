@@ -17,7 +17,7 @@ def main():
 
   # model = ppo.PPO("MlpPolicy", env, verbose=1)
   # print("############Training completed################")
-  model = ppo.PPO.load(os.path.join(currentdir,"burger_orientation"))
+  model = ppo.PPO.load(os.path.join(currentdir,"burger_orientation_pi_rad"))
 
   obs,info = env.reset()
   done = False
