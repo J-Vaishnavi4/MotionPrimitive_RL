@@ -23,6 +23,7 @@ def main():
       temp = evaluate_policy(model,model.env,n_eval_episodes=5)
       if (temp[0]>best):
           model.save("./best_models/PPO/Orientation_MP")
+          best=temp[0]
       if (i%10==0):
           model.save("./models/PPO/Orientation_MP")
 
