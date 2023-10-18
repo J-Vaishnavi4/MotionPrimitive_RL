@@ -3,6 +3,8 @@ currentdir = os.path.dirname(__file__)
 parentdir = os.path.dirname(currentdir)
 os.sys.path.insert(0, parentdir)
 
+ 
+
 import math
 import gymnasium as gym
 import time
@@ -16,12 +18,19 @@ from pybullet_utils import bullet_client as bc
 import pybullet_data
 from pkg_resources import parse_version
 
+ 
+
 RENDER_HEIGHT = 720
 RENDER_WIDTH = 960
 
+ 
+
+ 
 
 class turtlebot3_burger_GymEnv_orientation(gym.Env):
   metadata = {'render.modes': ['human', 'rgb_array'], 'video.frames_per_second': 50}
+
+ 
 
   def __init__(self,
                urdfRoot=pybullet_data.getDataPath(),
@@ -47,6 +56,8 @@ class turtlebot3_burger_GymEnv_orientation(gym.Env):
     else:
       self._p = bc.BulletClient()
 
+ 
+
     self.seed()
     #self.reset()
     observationDim = 7
@@ -60,6 +71,8 @@ class turtlebot3_burger_GymEnv_orientation(gym.Env):
       self.action_space = spaces.Box(-action_high, action_high, dtype=np.float32)
     self.observation_space = spaces.Box(-observation_high, observation_high, dtype=float)
     self.viewer = None
+
+ 
 
   def reset(self,seed = None):
     self._p.resetSimulation()
@@ -79,17 +92,25 @@ class turtlebot3_burger_GymEnv_orientation(gym.Env):
     info = {}
     return np.array(self._observation),info
 
+ 
+
   def __del__(self):
     self._p = 0
+
+ 
 
   def seed(self, seed=None):
     self.np_random, seed = seeding.np_random(seed)
     return [seed]
 
+ 
+
   def getExtendedObservation(self):
     self._observation = self._robot.getObservation()
     # print(self._observation)
     return self._observation
+
+ 
 
   def step(self, action):
     # print(action)
@@ -100,6 +121,8 @@ class turtlebot3_burger_GymEnv_orientation(gym.Env):
       # self.prev_orn_diff = abs(self.prev_orn - self._euler_orientation[2])
       self.prev_ang_vel = self._p.getBaseVelocity(self._robot.robotUniqueId)[1][2]    #ang vel about z-axis
 
+ 
+
     if (self._isDiscrete):
       rightVel = [-1, -0.5, -0.1, 0, 0.5, 0.1, 1, 0.2, 0.8]
       leftVel = [-1, -0.5, -0.1, 0, 0.5, 0.1, 1, 0.2, 0.8]
@@ -109,11 +132,15 @@ class turtlebot3_burger_GymEnv_orientation(gym.Env):
     else:
       realaction = action
 
+ 
+
     self._robot.applyAction(realaction[0],realaction[1])
     for i in range(self._actionRepeat):
       self._p.stepSimulation()
       time.sleep(self._timeStep)
       self._observation = self.getExtendedObservation()
+
+ 
 
       if self._termination():
         break
@@ -122,6 +149,8 @@ class turtlebot3_burger_GymEnv_orientation(gym.Env):
     done = self._termination()
     truncated = done
     return np.array(self._observation), reward, done, truncated, {}
+
+ 
 
   def render(self, mode='human', close=False):
     if mode != "rgb_array":
@@ -146,6 +175,8 @@ class turtlebot3_burger_GymEnv_orientation(gym.Env):
     rgb_array = rgb_array[:, :, :3]
     return rgb_array
 
+ 
+
   def _termination(self):
     robot_pos, robot_orn = self._p.getBasePositionAndOrientation(self._robot.robotUniqueId)
     d = (abs(np.asarray(robot_pos) - np.asarray(self._robot_initial_pos)))
@@ -154,10 +185,14 @@ class turtlebot3_burger_GymEnv_orientation(gym.Env):
     # yaw = self._p.getEulerFromQuaternion(robot_orn)[2]
     # print("yaw: ",yaw)
     # lV, aV = self._p.getBaseVelocity(self._robot.robotUniqueId)
-    return displacement>=1 or self._envStepCounter>5000
+    return displacement>=0.15 or self._envStepCounter>5000
     # return self._envStepCounter>600
 
+ 
+
   def _reward(self):
+
+ 
 
     robot_pos,robot_orn = self._p.getBasePositionAndOrientation(self._robot.robotUniqueId)
     d = (abs(np.asarray(robot_pos) - np.asarray(self._robot_initial_pos)))
@@ -170,16 +205,25 @@ class turtlebot3_burger_GymEnv_orientation(gym.Env):
     # if dist_to_goal!=0:
     #   print("dist to goal:", dist_to_goal)
 
+ 
+
     if (orn_change>=2*math.pi) and abs(aV[2]) < 0.01:
       print("reached")
 
+ 
+
     rew1 = -1000*(displacement)                                      # penalizing linear displacement from initial position
-    rew3 = 100*(orn_change)                                         # reward based on orientation change in anti-clockwise rotation
-    rew4 = 5000*(yaw==2*math.pi and abs(lV[0])+abs(lV[1]) < 0.01 and abs(aV[2]) < 0.01)   # reward when robot's orientation is close to goal and it's ang vel is small
-    
-    reward = rew1 + rew3 + rew4
+    rew3 = 100*(orn_change)*(yaw>0 and self.prev_orn>0)+100*(orn_change)*(yaw<0 and self.prev_orn>0)
+                                             # reward based on orientation change in anti-clockwise rotation
+    # rew4 = 5000*(yaw==2*math.pi and abs(lV[0])+abs(lV[1]) < 0.01 and abs(aV[2]) < 0.01)   # reward when robot's orientation is close to goal and it's ang vel is small
+
+ 
+
+    reward = rew1 + rew3
     # print(reward)
     return reward
+
+ 
 
   if parse_version(gym.__version__) < parse_version('0.9.6'):
     _render = render
