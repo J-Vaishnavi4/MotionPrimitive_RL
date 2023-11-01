@@ -4,7 +4,7 @@ currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentfram
 parentdir = os.path.dirname(os.path.dirname(currentdir))
 os.sys.path.insert(0, parentdir)
 
-from turtlebot3_burger_GymEnv_WC import turtlebot3_burger_GymEnv_CW
+from turtlebot3_burger_GymEnv_CW import turtlebot3_burger_GymEnv_CW
 import datetime
 from stable_baselines3 import ppo
 from stable_baselines3.common.env_checker import check_env
