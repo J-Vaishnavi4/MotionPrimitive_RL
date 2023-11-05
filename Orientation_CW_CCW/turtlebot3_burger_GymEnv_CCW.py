@@ -51,8 +51,8 @@ class turtlebot3_burger_GymEnv_CCW(gym.Env):
       self._p = bc.BulletClient()
 
     self.seed()
-    self.reset()
-    observationDim = 7      # yaw, Vx,Vy, Vz, Wx, Wy, Wz
+    # self.reset()
+    observationDim = 8      # displacement, yaw_change, Vx,Vy, Vz, Wx, Wy, Wz
     observation_high = np.ones(observationDim) * 10  #np.inf
     if (isDiscrete):
       self.action_space = spaces.Discrete(9)
@@ -68,7 +68,6 @@ class turtlebot3_burger_GymEnv_CCW(gym.Env):
     self._p.resetSimulation()
     #self._p.setPhysicsEngineParameter(numSolverIterations=300)
     self._p.setTimeStep(self._timeStep)
-    self._robot_initial_pos = [0, 0, 0]
     self._p.loadURDF(currentdir+'/turtlebot3_description/urdf/simpleplane.urdf')
     self._p.setGravity(0, 0, -10)
     self._robot = turtlebot3_burger.TurtleBot3(self._p, urdfRootPath=self._urdfRoot, timeStep=self._timeStep)
@@ -76,7 +75,11 @@ class turtlebot3_burger_GymEnv_CCW(gym.Env):
     for i in range(100):
       self._p.stepSimulation()
     self._observation = self.getExtendedObservation()
-    self._initial_orientation = self._observation[0]*(self._observation[0] >= 0)+(self._observation[0]+2*math.pi)*(self._observation[0]<0)
+    self._robot_initial_pos = self._observation[0]
+    self._initial_orientation = self._observation[1]
+    self._observation[0] = 0    #displacement from initial position
+    self._observation[1] = 0    #yaw change=0
+    # print(self._initial_orientation, self._observation[0])
     info = {}
     return np.array(self._observation),info
 
@@ -118,11 +121,13 @@ class turtlebot3_burger_GymEnv_CCW(gym.Env):
       self._observation = self.getExtendedObservation()
 
  
-
       if self._termination():
+        # print("terminated")
         break
       self._envStepCounter += 1
-    reward = self._reward()
+    reward,yaw_change, displacement = self._reward()
+    self._observation[0] = displacement
+    self._observation[1] = yaw_change
     done = self._termination()
     truncated = done
     return np.array(self._observation), reward, done, truncated, {}
@@ -154,32 +159,28 @@ class turtlebot3_burger_GymEnv_CCW(gym.Env):
     robot_pos, robot_orn = self._p.getBasePositionAndOrientation(self._robot.robotUniqueId)
     d = (abs(np.asarray(robot_pos) - np.asarray(self._robot_initial_pos)))
     displacement = math.sqrt(math.pow(d[0],2) + math.pow(d[1],2))
-    # yaw = self._p.getEulerFromQuaternion(robot_orn)[2]
-    # print("yaw: ",yaw)
-    lV, aV = self._p.getBaseVelocity(self._robot.robotUniqueId)
-    return displacement>=0.15 or self._envStepCounter>5000 or aV[2]<0
-    # return self._envStepCounter>600
+    # lV, aV = self._p.getBaseVelocity(self._robot.robotUniqueId)
+    if displacement>=0.15:
+      print("terminated because of displacement")
+    return displacement>=0.15 or self._envStepCounter>5000
 
   def _reward(self):
     robot_pos,robot_orn = self._p.getBasePositionAndOrientation(self._robot.robotUniqueId)
     d = (abs(np.asarray(robot_pos) - np.asarray(self._robot_initial_pos)))
     displacement = math.sqrt(math.pow(d[0],2) + math.pow(d[1],2))
     yaw = self._p.getEulerFromQuaternion(robot_orn)[2]
-    if yaw<0:
-      yaw = yaw + 2*math.pi
-    yaw_change = yaw - self._initial_orientation
+    if yaw < self._initial_orientation:
+      yaw_change = 2*math.pi + yaw - self._initial_orientation
+    else:
+      yaw_change = yaw - self._initial_orientation
     lV, aV = self._p.getBaseVelocity(self._robot.robotUniqueId)
 
-    # if (abs(yaw- self._initial_orientation - 2*math.pi) <= 0.01) and 0 <= aV[2] < 0.001:
-    #   print("reached: ")
-    
     rew1 = -1000*(displacement)                               # penalizing linear displacement from initial position
-    rew2 = 1000*(yaw_change)*(yaw_change <= 0.7*2*math.pi) + 500*(yaw_change)*(0.7*2*math.pi < yaw_change<=0.85*2*math.pi) + (50*yaw_change)*(0.85*2*math.pi < yaw_change <= 2*math.pi)                                    
-    rew3 = (0.85*2*math.pi < yaw_change < 2*math.pi and aV[2]>0)*(self.prev_ang_vel-aV[2])*1000
+    rew2 = 1000*(yaw_change)*(aV[2])*(yaw_change <= 0.7*2*math.pi) + 500*(yaw_change)*(aV[2])*(0.7*2*math.pi < yaw_change<=0.85*2*math.pi) + (50*yaw_change)*(aV[2])*(0.85*2*math.pi < yaw_change <= 2*math.pi)
+    rew3 = (0.85*2*math.pi < yaw_change < 2*math.pi)*(aV[2])*(abs(self.prev_ang_vel)-abs(aV[2]))*1000
+    
     reward = rew1 + rew2 + rew3
-    # print("Initial yaw: ", self._initial_orientation)
-    # print("rew:",rew1, rew2, rew3)
-    return reward
+    return reward, yaw_change, displacement
 
   if parse_version(gym.__version__) < parse_version('0.9.6'):
     _render = render

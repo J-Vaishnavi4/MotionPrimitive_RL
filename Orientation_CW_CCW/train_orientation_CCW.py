@@ -15,7 +15,7 @@ def main():
 # It will check your custom environment and output additional warnings if needed
   check_env(env)
   # model = PPO.load(os.path.join(currentdir,"./best_models/PPO/orientation_MP_360degree"))
-  model = ppo.PPO("MlpPolicy", env, verbose=1,tensorboard_log="./tensorboard/PPO/orientation_MP_CCW/")
+  model = ppo.PPO("MlpPolicy", env, verbose=1)#,tensorboard_log="./tensorboard/PPO/orientation_MP_CCW/")
   best = 0
   for i in range(20):
       print("iteration: ",i)

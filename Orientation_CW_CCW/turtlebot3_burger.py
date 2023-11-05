@@ -13,13 +13,14 @@ class TurtleBot3:
         self.reset()
 
     def reset(self):
-        robot = self._p.loadURDF(currentdir+'/turtlebot3_description/urdf/turtlebot3_waffle.urdf.xacro',[0,0,0])
-
+        euler_offset = (0, 0, 0)
+        quaternion_offset = self._p.getQuaternionFromEuler(euler_offset)
+        robot = self._p.loadURDF(currentdir+'/turtlebot3_description/urdf/turtlebot3_waffle.urdf.xacro',[0,0,0],baseOrientation=quaternion_offset)
         self.robotUniqueId = robot
 
         self.Wheels = [1,2] #1 is left 2 is right
         self.maxForce = 350
-        self.nMotors = 2 
+        self.nMotors = 2
         self.speedMultiplierRight = 0.5*1
         self.speedMultiplierLeft = 0.5*1
 
@@ -36,10 +37,11 @@ class TurtleBot3:
         observation = []
         pos, orn = self._p.getBasePositionAndOrientation(self.robotUniqueId)
         linV, angV = self._p.getBaseVelocity(self.robotUniqueId)
-
+        observation.append(list(pos))
         observation.append(self._p.getEulerFromQuaternion(orn)[2])
         observation.extend(list(linV))
         observation.extend(list(angV))
+        # print(observation[0])
         return observation
 
     def applyAction(self, lin_vel,ang_vel):
@@ -51,4 +53,3 @@ class TurtleBot3:
         targetVelocityLeft = (2*lin_vel - ang_vel*L)/(2*R) * self.speedMultiplierLeft
 
         self._p.setJointMotorControlArray(self.robotUniqueId,[1,2],self._p.VELOCITY_CONTROL, targetVelocities=[targetVelocityLeft,targetVelocityRight],forces=[self.maxForce,self.maxForce])
-
