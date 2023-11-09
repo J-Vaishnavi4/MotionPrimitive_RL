@@ -28,7 +28,7 @@ class turtlebot3_burger_GymEnv_CCW(gym.Env):
 
   def __init__(self,
                urdfRoot=pybullet_data.getDataPath(),
-               actionRepeat=50,
+               actionRepeat=10,
                isEnableSelfCollision=True,
                isDiscrete=False,
                renders=False):
