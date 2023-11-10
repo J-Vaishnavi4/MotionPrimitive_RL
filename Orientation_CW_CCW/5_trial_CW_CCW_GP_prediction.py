@@ -25,11 +25,10 @@ def main():
 
     model = ppo.PPO.load(os.path.join(currentdir,"./best_models/PPO/orientation_MP_"+MP_name))
 
-    GP_ = pickle.load(open(os.path.join(currentdir,"./GP_models/"+MP_name+"/no_noise.dump"), "rb"))
+    GP_ = pickle.load(open(os.path.join(currentdir,"./GP_models/"+MP_name+"/noisy.dump"), "rb"))
     required_yaw = 1.5
     mean_prediction, std_prediction = GP_.predict(np.array([required_yaw]).reshape(1,-1), return_std=True)
     required_timesteps = round(mean_prediction[0])-1
-    print("Orientation_change: "+ str(required_yaw)+"\ntimesteps: "+str(required_timesteps)+ "\nstandard deviation"+str(std_prediction[0]))
 
     obs,info = env.reset()
     done = False
@@ -45,9 +44,9 @@ def main():
             action = [0,0]
             obs, reward, done,truncated, info = env.step(action)
         if j == required_timesteps:
-            data = obs[1]
-            data = np.append(data, j+1)
-            print(data)
+            print("Required orientation_change: "+ str(required_yaw)+"\nPredicted timesteps: "+str(required_timesteps)+ \
+            "\nstandard deviation: "+str(std_prediction[0]))
+            print("Actual orientation change: ",obs[1])
         env.render(mode='human')
 
     env.close()
