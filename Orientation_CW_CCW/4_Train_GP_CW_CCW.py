@@ -36,7 +36,7 @@ gaussian_process.kernel_
 
 mean_prediction, std_prediction = gaussian_process.predict(X, return_std=True)
 
-plt.plot(X, y, label=r"$f(x) = x \sin(x)$", linestyle="dotted")
+plt.plot(X, y, label=r"$f(x) = timesteps$", linestyle="dotted")
 plt.scatter(X_train, y_train, label="Observations")
 plt.plot(X, mean_prediction, label="Mean prediction")
 plt.fill_between(
@@ -69,7 +69,7 @@ gaussian_process = GaussianProcessRegressor(
 gaussian_process.fit(X_train, y_train_noisy)
 mean_prediction, std_prediction = gaussian_process.predict(X, return_std=True)
 
-plt.plot(X, y, label=r"$f(x) = time$", linestyle="dotted")
+plt.plot(X, y, label=r"$f(x) = timesteps$", linestyle="dotted")
 plt.scatter(X_train, y_train_noisy, label = "Observations")
 
 plt.plot(X, mean_prediction, label="Mean prediction")
