@@ -3,8 +3,6 @@ currentdir = os.path.dirname(__file__)
 parentdir = os.path.dirname(currentdir)
 os.sys.path.insert(0, parentdir)
 
- 
-
 import math
 import gymnasium as gym
 import time
@@ -18,7 +16,7 @@ from pybullet_utils import bullet_client as bc
 import pybullet_data
 from pkg_resources import parse_version
 
- 
+
 
 RENDER_HEIGHT = 720
 RENDER_WIDTH = 960
@@ -57,7 +55,7 @@ class turtlebot3_burger_GymEnv_CCW(gym.Env):
     if (isDiscrete):
       self.action_space = spaces.Discrete(9)
     else:
-      action_dim = 2 #consider everything as list
+      action_dim = 2             # Linear Velocity and Angulr Velocity
       self._action_bound = 1
       action_high = np.array([self._action_bound]*action_dim)
       self.action_space = spaces.Box(-action_high, action_high, dtype=np.float32)
@@ -77,9 +75,8 @@ class turtlebot3_burger_GymEnv_CCW(gym.Env):
     self._observation = self.getExtendedObservation()
     self._robot_initial_pos = self._observation[0]
     self._initial_orientation = self._observation[1]
-    self._observation[0] = 0    #displacement from initial position
-    self._observation[1] = 0    #yaw change=0
-    # print(self._initial_orientation, self._observation[0])
+    self._observation[0] = 0    # initial displacement from initial position = 0
+    self._observation[1] = 0    # initial yaw change=0
     info = {}
     return np.array(self._observation),info
 
@@ -96,14 +93,8 @@ class turtlebot3_burger_GymEnv_CCW(gym.Env):
     return self._observation
 
   def step(self, action):
-    # print(action)
     if (self._renders):
-      basePos, orn = self._p.getBasePositionAndOrientation(self._robot.robotUniqueId)
-      d = (abs(np.asarray(basePos)[0] - np.asarray(self._robot_initial_pos)))
-      self.prev_orn = self._p.getEulerFromQuaternion(orn)[2]
-      if self.prev_orn < 0:
-        self.prev_orn += 2*math.pi
-      self.prev_ang_vel = self._p.getBaseVelocity(self._robot.robotUniqueId)[1][2]    #ang vel about z-axis
+      self.prev_ang_vel = self._p.getBaseVelocity(self._robot.robotUniqueId)[1][2]    # ang vel about z-axis before action is applied
 
     if (self._isDiscrete):
       rightVel = [-1, -0.5, -0.1, 0, 0.5, 0.1, 1, 0.2, 0.8]
@@ -120,12 +111,10 @@ class turtlebot3_burger_GymEnv_CCW(gym.Env):
       time.sleep(self._timeStep)
       self._observation = self.getExtendedObservation()
 
- 
       if self._termination():
-        # print("terminated")
         break
       self._envStepCounter += 1
-    reward,yaw_change, displacement = self._reward()
+    reward, yaw_change, displacement = self._reward()
     self._observation[0] = displacement
     self._observation[1] = yaw_change
     done = self._termination()
@@ -159,7 +148,6 @@ class turtlebot3_burger_GymEnv_CCW(gym.Env):
     robot_pos, robot_orn = self._p.getBasePositionAndOrientation(self._robot.robotUniqueId)
     d = (abs(np.asarray(robot_pos) - np.asarray(self._robot_initial_pos)))
     displacement = math.sqrt(math.pow(d[0],2) + math.pow(d[1],2))
-    # lV, aV = self._p.getBaseVelocity(self._robot.robotUniqueId)
     if displacement>=0.15:
       print("terminated because of displacement")
     return displacement>=0.15 or self._envStepCounter>5000
@@ -175,10 +163,14 @@ class turtlebot3_burger_GymEnv_CCW(gym.Env):
       yaw_change = yaw - self._initial_orientation
     lV, aV = self._p.getBaseVelocity(self._robot.robotUniqueId)
 
+    " rew1: Penalize linear displacement from robot's initial position"
+    " rew2: Angular velocity should be positive for counter clockwise rotation"
+    " rew3: Robot should slow down as it is close to completing the 360 degree rotation"
+
     rew1 = -1000*(displacement)                               # penalizing linear displacement from initial position
     rew2 = 1000*(yaw_change)*(aV[2])*(yaw_change <= 0.7*2*math.pi) + 500*(yaw_change)*(aV[2])*(0.7*2*math.pi < yaw_change<=0.85*2*math.pi) + (50*yaw_change)*(aV[2])*(0.85*2*math.pi < yaw_change <= 2*math.pi)
     rew3 = (0.85*2*math.pi < yaw_change < 2*math.pi)*(aV[2])*(abs(self.prev_ang_vel)-abs(aV[2]))*1000
-    
+
     reward = rew1 + rew2 + rew3
     return reward, yaw_change, displacement
 
@@ -187,4 +179,3 @@ class turtlebot3_burger_GymEnv_CCW(gym.Env):
     _reset = reset
     _seed = seed
     _step = step
-

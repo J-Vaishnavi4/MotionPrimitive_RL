@@ -52,12 +52,12 @@ class turtlebot3_burger_GymEnv_CW(gym.Env):
 
     self.seed()
     # self.reset()
-    observationDim = 8      # yaw, Vx,Vy, Vz, Wx, Wy, Wz
+    observationDim = 8      # displacement, yaw, Vx, Vy, Vz, Wx, Wy, Wz
     observation_high = np.ones(observationDim) * 10  #np.inf
     if (isDiscrete):
       self.action_space = spaces.Discrete(9)
     else:
-      action_dim = 2 #consider everything as list
+      action_dim = 2                # Linear Velocity and Angulr Velocity
       self._action_bound = 1
       action_high = np.array([self._action_bound]*action_dim)
       self.action_space = spaces.Box(-action_high, action_high, dtype=np.float32)
@@ -76,10 +76,9 @@ class turtlebot3_burger_GymEnv_CW(gym.Env):
       self._p.stepSimulation()
     self._observation = self.getExtendedObservation()
     self._initial_orientation = self._observation[1]
-    # print(self._initial_orientation)
     self._robot_initial_pos = self._observation[0]
-    self._observation[0] = 0    #displacement from initial position
-    self._observation[1] = 0    #yaw change=0
+    self._observation[0] = 0    #initial displacement from initial position = 0
+    self._observation[1] = 0    # initial yaw change = 0
     info = {}
     return np.array(self._observation),info
 
@@ -92,21 +91,11 @@ class turtlebot3_burger_GymEnv_CW(gym.Env):
 
   def getExtendedObservation(self):
     self._observation = self._robot.getObservation()
-    # print(self._observation)
     return self._observation
 
   def step(self, action):
-    # print(action)
     if (self._renders):
-      basePos, orn = self._p.getBasePositionAndOrientation(self._robot.robotUniqueId)
-      d = (abs(np.asarray(basePos)[0] - np.asarray(self._robot_initial_pos)))
-      self.prev_orn = self._p.getEulerFromQuaternion(orn)[2]
-      if 0<self.prev_orn <=math.pi:
-        self.prev_orn = 2*math.pi - self.prev_orn
-      elif self.prev_orn<=0:
-        self.prev_orn = -self.prev_orn
-
-      self.prev_ang_vel = self._p.getBaseVelocity(self._robot.robotUniqueId)[1][2]    #ang vel about z-axis
+      self.prev_ang_vel = self._p.getBaseVelocity(self._robot.robotUniqueId)[1][2]     # angular vel about z-axis before action is applied
 
     if (self._isDiscrete):
       rightVel = [-1, -0.5, -0.1, 0, 0.5, 0.1, 1, 0.2, 0.8]
@@ -160,21 +149,25 @@ class turtlebot3_burger_GymEnv_CW(gym.Env):
     robot_pos, robot_orn = self._p.getBasePositionAndOrientation(self._robot.robotUniqueId)
     d = (abs(np.asarray(robot_pos) - np.asarray(self._robot_initial_pos)))
     displacement = math.sqrt(math.pow(d[0],2) + math.pow(d[1],2))
-    # lV, aV = self._p.getBaseVelocity(self._robot.robotUniqueId)
-    return displacement>=0.15 or self._envStepCounter>5000 
-  
+    return displacement>=0.15 or self._envStepCounter>5000
+
   def _reward(self):
     robot_pos,robot_orn = self._p.getBasePositionAndOrientation(self._robot.robotUniqueId)
     d = (abs(np.asarray(robot_pos) - np.asarray(self._robot_initial_pos)))
     displacement = math.sqrt(math.pow(d[0],2) + math.pow(d[1],2))
     yaw = self._p.getEulerFromQuaternion(robot_orn)[2]
-    if yaw<self._initial_orientation:
+    if yaw < self._initial_orientation:
       yaw_change = - yaw + self._initial_orientation
     else:
       yaw_change = 2*math.pi - yaw + self._initial_orientation
     lV, aV = self._p.getBaseVelocity(self._robot.robotUniqueId)
 
-    rew1 = -1000*(displacement)                               # penalizing linear displacement from initial position
+
+    " rew1: Penalize linear displacement from robot's initial position"
+    " rew2: Angular velocity should be negative for clockwise rotation"
+    " rew3: Robot should slow down as it is close to completing the 360 degree rotation"
+
+    rew1 = -1000*(displacement)
     rew2 = 1000*(yaw_change)*(-aV[2])*(yaw_change <= 0.7*2*math.pi) + 500*(yaw_change)*(-aV[2])*(0.7*2*math.pi < yaw_change<=0.85*2*math.pi) + (50*yaw_change)*(-aV[2])*(0.85*2*math.pi < yaw_change <= 2*math.pi)
     rew3 = (0.85*2*math.pi < yaw_change < 2*math.pi)*(-aV[2])*(abs(self.prev_ang_vel)-abs(aV[2]))*1000
     reward = rew1 + rew2 + rew3

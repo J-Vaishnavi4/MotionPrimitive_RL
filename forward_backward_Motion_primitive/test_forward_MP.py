@@ -22,21 +22,18 @@ def main():
   done = False
   rew=0
   rew1, rew2, rew3, reward_plot = [info['rew1']], [info['rew2']], [info['rew3']], [0]
-  # rew1, rew2, reward_plot = [info['rew1']], [info['rew2']], [0]
 
   displacement, yaw_change = [obs[0]], [obs[1]]
-  
+
   for i in range(10000):
       action, _states = model.predict(obs, deterministic=True)
       obs, reward, done,truncated, info = env.step(action)
-      # print("info", info)
       reward_plot.append(reward)
       rew1.append(info['rew1'])
       rew2.append(info['rew2'])
       rew3.append(info['rew3'])
       displacement.append(obs[0])
       yaw_change.append(obs[1])
-      # print("action is ", action)
       env.render(mode='human')
       rew+=reward
       if done:
