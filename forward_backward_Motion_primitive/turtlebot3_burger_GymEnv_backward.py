@@ -68,7 +68,7 @@ class turtlebot3_burger_GymEnv_backward(gym.Env):
     self._p.resetSimulation()
     #self._p.setPhysicsEngineParameter(numSolverIterations=300)
     self._p.setTimeStep(self._timeStep)
-    
+
     self._p.loadURDF(currentdir+'/turtlebot3_description/urdf/simpleplane.urdf')
     self._p.setGravity(0, 0, -10)
     self._robot = turtlebot3_burger.TurtleBot3(self._p, urdfRootPath=self._urdfRoot, timeStep=self._timeStep)
@@ -84,7 +84,7 @@ class turtlebot3_burger_GymEnv_backward(gym.Env):
     info = {}
     info['rew1']=0
     info['rew2']=0
-    info['rew3']=0
+    # info['rew3']=0
     return np.array(self._observation),info
 
   def __del__(self):
@@ -121,9 +121,9 @@ class turtlebot3_burger_GymEnv_backward(gym.Env):
       if self._termination():
         break
       self._envStepCounter += 1
-    rew1, rew2, rew3, yaw_change, displacement= self._reward(action)
-    reward = min(rew1, rew2, rew3)
-    
+    rew1, rew2, yaw_change, displacement= self._reward(action)
+    reward = min(rew1, rew2)
+
     self._observation[0] = displacement
     self._observation[1] = yaw_change
     done = self._termination()
@@ -133,7 +133,7 @@ class turtlebot3_burger_GymEnv_backward(gym.Env):
     info = {}
     info['rew1']=rew1
     info['rew2']=rew2
-    info['rew3']=rew3
+    # info['rew3']=rew3
     return np.array(self._observation), reward, done, truncated, info
 
   def render(self, mode='human', close=False):
@@ -190,7 +190,7 @@ class turtlebot3_burger_GymEnv_backward(gym.Env):
         c2 = 1
 
     return c1, c2
-  
+
   def _reward(self, action):
     robot_pos,robot_orn = self._p.getBasePositionAndOrientation(self._robot.robotUniqueId)
     d = (abs(np.asarray(robot_pos) - np.asarray(self._robot_initial_pos)))
@@ -199,14 +199,13 @@ class turtlebot3_burger_GymEnv_backward(gym.Env):
     yaw_change = abs(yaw - self._initial_orientation)
     lV, aV = self._p.getBaseVelocity(self._robot.robotUniqueId)
     # print("Linear and angular vel: ", lV,aV)
-    c1, c2 = self._sign_value(yaw)
-    
-    rew1 = int(abs(np.linalg.norm(lV) - 0.22) < 0.05)
-    rew2 = int(yaw_change < 0.1)
-    rew3 = int(lV[0]*c1 > 0 and lV[1]*c2 > 0)
+    # c1, c2 = self._sign_value(yaw)
+
+    rew1 = int((abs(np.linalg.norm(lV) - 0.22) < 0.05) and action[0] < 0)
+    rew2 = int(yaw_change == 0.001)
     # reward = rew1 + rew2 + rew3
 
-    return rew1, rew2, rew3, yaw_change, displacement
+    return rew1, rew2, yaw_change, displacement
 
   if parse_version(gym.__version__) < parse_version('0.9.6'):
     _render = render
