@@ -10,8 +10,8 @@ import pickle
 
 currentdir = os.path.dirname(__file__)
 
-MP_name = input("Clockwise(CW)/ Counter Clockwise (CCW) MP: ")
-if (MP_name=="CCW" or MP_name=="CW"):
+MP_name = input("Forward(F)/ Backward (B) MP: ")
+if MP_name == "F" or MP_name == "B":
     pass
 else:
     raise SystemExit("Incorrect MP name")
@@ -19,11 +19,11 @@ else:
 if not os.path.exists("./GP_models/"+MP_name):
    os.makedirs("./GP_models/"+MP_name)
 
-rows1 = pd.read_csv(os.path.join(currentdir, "./Samples/"+MP_name+"/samples.csv"), usecols=["Yaw_change"])
+rows1 = pd.read_csv(os.path.join(currentdir, "./Samples/"+MP_name+"/samples.csv"), usecols=["displacement"])
 rows2 = pd.read_csv(os.path.join(currentdir, "./Samples/"+MP_name+"/samples.csv"), usecols=["time"])
 
-X = rows1.to_numpy()    # input to GP - Orientation_change (in radians)
-y = rows2.to_numpy()    # output of GP - timesteps for which policy should be applied for the required orientation change
+X = rows1.to_numpy()    # input to GP - Displacement (in metres)
+y = rows2.to_numpy()    # output of GP - timesteps for which policy should be applied for the required displacement
 
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2)
 
@@ -47,8 +47,8 @@ plt.fill_between(
     label=r"95% confidence interval",
 )
 plt.legend()
-plt.xlabel("$orientation change$")
-plt.ylabel("$time$")
+plt.xlabel("$displacement$")
+plt.ylabel("$timestep$")
 _ = plt.title("Gaussian process regression on noise-free dataset")
 plt.show()
 
@@ -82,8 +82,8 @@ plt.fill_between(
     label=r"95% confidence interval",
 )
 plt.legend()
-plt.xlabel("$orientation change$")
-plt.ylabel("$time$")
+plt.xlabel("$displacement$")
+plt.ylabel("$timestep$")
 _ = plt.title("Gaussian process regression on a noisy dataset")
 
 plt.show()
@@ -94,6 +94,6 @@ with open("./GP_models/"+MP_name+"/noisy_exp.dump" , "wb") as f:
 model2 = pickle.load(open("./GP_models/"+MP_name+"/noisy_exp.dump","rb"))
 
 "---------------PREDICTION------------"
-required_yaw = 2.5  #radians
-mean_prediction, std_prediction = model2.predict(np.array([required_yaw]).reshape(1, -1), return_std=True)
-print("orientation change: "+str(required_yaw)+" rad \ntimesteps: "+str(mean_prediction[0])+"\nstandard deviation: "+ str(std_prediction[0]))
+required_displacement = 2.5  #metres
+mean_prediction, std_prediction = model2.predict(np.array([required_displacement]).reshape(1, -1), return_std=True)
+print("orientation change: "+str(required_displacement)+" rad \ntimesteps: "+str(mean_prediction[0])+"\nstandard deviation: "+ str(std_prediction[0]))

@@ -46,7 +46,7 @@ class turtlebot3_burger_GymEnv_backward(gym.Env):
     self._cam_yaw = 50
     self._cam_pitch = -35
     if self._renders:
-      self._p = bc.BulletClient(connection_mode=pybullet.GUI)
+      self._p = bc.BulletClient(connection_mode=pybullet.DIRECT)
     else:
       self._p = bc.BulletClient()
 
@@ -122,7 +122,7 @@ class turtlebot3_burger_GymEnv_backward(gym.Env):
         break
       self._envStepCounter += 1
     rew1, rew2, rew3, yaw_change, displacement= self._reward(action)
-    reward = rew1 + rew2 + rew3
+    reward = min(rew1, rew2, rew3)
     
     self._observation[0] = displacement
     self._observation[1] = yaw_change
@@ -198,12 +198,12 @@ class turtlebot3_burger_GymEnv_backward(gym.Env):
     yaw = self._p.getEulerFromQuaternion(robot_orn)[2]
     yaw_change = abs(yaw - self._initial_orientation)
     lV, aV = self._p.getBaseVelocity(self._robot.robotUniqueId)
-    
+    # print("Linear and angular vel: ", lV,aV)
     c1, c2 = self._sign_value(yaw)
-    rew1 = 500*(lV[0]*c1 + lV[1]*c2)
-    # rew1 = 500*(lV[0]*(-math.cos(yaw)) + lV[1]*(-math.sin(yaw)))                            
-    rew2 = -1000*(abs(action[1]))
-    rew3 = -1000*(displacement*math.sin(yaw_change))     #lateral deviation
+    
+    rew1 = int(abs(np.linalg.norm(lV) - 0.22) < 0.05)
+    rew2 = int(yaw_change < 0.1)
+    rew3 = int(lV[0]*c1 > 0 and lV[1]*c2 > 0)
     # reward = rew1 + rew2 + rew3
 
     return rew1, rew2, rew3, yaw_change, displacement
