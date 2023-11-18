@@ -44,7 +44,7 @@ def main():
     "Action ([lin_vel, ang_vel]) according to the trained policy is applied for 'j' timesteps and then [0,0] action is applied.\
      Yaw change (obs[1]) is observed at the end of (j+1)th timestep"
 
-    for j in range(55):
+    for j in range(550):
         obs,info = env.reset()
         for i in range(j+10):
             if i<=j:

@@ -24,9 +24,9 @@ def main():
     else:
         raise SystemExit("Incorrect MP name")
     check_env(env)
-    model = ppo.PPO("MlpPolicy", env, verbose=0)#,tensorboard_log="./tensorboard/PPO/forward_MP_4/")
+    model = ppo.PPO("MlpPolicy", env, verbose=1)#,tensorboard_log="./tensorboard/PPO/forward_MP_4/")
     best = 0
-    for i in range(100):
+    for i in range(200):
         print("iteration: ",i)
         model.learn(total_timesteps=1000)
         temp = evaluate_policy(model,model.env,n_eval_episodes=5)

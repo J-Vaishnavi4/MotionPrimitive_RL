@@ -25,16 +25,16 @@ def main():
 
     model = ppo.PPO.load(os.path.join(currentdir,"./best_models/PPO/orientation_MP_"+MP_name))
 
-    GP_ = pickle.load(open(os.path.join(currentdir,"./GP_models/"+MP_name+"/noisy_exp.dump"), "rb"))
-    required_yaw = 1.5
+    GP_ = pickle.load(open(os.path.join(currentdir,"./GP_models/"+MP_name+"/no_noise_exp.dump"), "rb"))
+    required_yaw = 2.5
     mean_prediction, std_prediction = GP_.predict(np.array([required_yaw]).reshape(1,-1), return_std=True)
-    required_timesteps = round(mean_prediction[0])-1
+    required_timesteps = round(mean_prediction[0])
 
     obs,info = env.reset()
     done = False
     rew=0
 
-    for j in range(100):
+    for j in range(550):
 
         if j <= required_timesteps:
             action, _states = model.predict(obs, deterministic=True)

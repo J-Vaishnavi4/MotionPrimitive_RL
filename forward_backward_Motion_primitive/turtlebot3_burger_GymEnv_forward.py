@@ -52,7 +52,7 @@ class turtlebot3_burger_GymEnv_forward(gym.Env):
 
     self.seed()
     self.reset()
-    observationDim = 8      # displacement, yaw_change, Vx,Vy, Vz, Wx, Wy, Wz
+    observationDim = 4      # displacement, yaw_change, Lin_vel, Ang_vel
     observation_high = np.ones(observationDim) * 10  #np.inf
     if (isDiscrete):
       self.action_space = spaces.Discrete(9)
@@ -105,6 +105,7 @@ class turtlebot3_burger_GymEnv_forward(gym.Env):
     if (self._renders):
       basePos, orn = self._p.getBasePositionAndOrientation(self._robot.robotUniqueId)
       d = (abs(np.asarray(basePos)[0] - np.asarray(self._robot_initial_pos)))
+      self._prev_speed = np.sqrt(self._observation[2]**2 + self._observation[3]**2)
 
     if (self._isDiscrete):
       rightVel = [-1, -0.5, -0.1, 0, 0.5, 0.1, 1, 0.2, 0.8]
@@ -205,8 +206,8 @@ class turtlebot3_burger_GymEnv_forward(gym.Env):
 
 
     # c1, c2 = self._sign_value(yaw)
-    rew1 = int((abs(np.linalg.norm(lV) - 0.22) < 0.05) and action[0] > 0)
-    rew2 = int(yaw_change == 0.001)
+    rew1 = int(((abs(np.linalg.norm(lV) - 0.22) < 0.05) or (np.linalg.norm(lV) - self._prev_speed > 0)) and action[0] > 0)
+    rew2 = int(yaw_change <= 0.01)
     # reward = rew1 + rew2 + rew3
     return rew1, rew2, yaw_change, displacement
 
