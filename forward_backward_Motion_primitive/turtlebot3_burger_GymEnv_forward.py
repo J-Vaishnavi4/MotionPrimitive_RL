@@ -46,7 +46,7 @@ class turtlebot3_burger_GymEnv_forward(gym.Env):
     self._cam_yaw = 50
     self._cam_pitch = -35
     if self._renders:
-      self._p = bc.BulletClient(connection_mode=pybullet.DIRECT)
+      self._p = bc.BulletClient(connection_mode=pybullet.GUI)
     else:
       self._p = bc.BulletClient()
 

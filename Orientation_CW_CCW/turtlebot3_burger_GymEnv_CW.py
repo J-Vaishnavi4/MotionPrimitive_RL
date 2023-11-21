@@ -52,12 +52,12 @@ class turtlebot3_burger_GymEnv_CW(gym.Env):
 
     self.seed()
     # self.reset()
-    observationDim = 8      # displacement, yaw, Vx, Vy, Vz, Wx, Wy, Wz
+    observationDim = 4      # displacement, yaw_change, Lin_vel, ang_vel
     observation_high = np.ones(observationDim) * 10  #np.inf
     if (isDiscrete):
       self.action_space = spaces.Discrete(9)
     else:
-      action_dim = 2                # Linear Velocity and Angulr Velocity
+      action_dim = 2                # Linear Velocity and Angular Velocity
       self._action_bound = 1
       action_high = np.array([self._action_bound]*action_dim)
       self.action_space = spaces.Box(-action_high, action_high, dtype=np.float32)

@@ -24,7 +24,7 @@ def main():
         raise SystemExit("Incorrect MP name")
     #check_env(env)
 
-    model = ppo.PPO.load(os.path.join(currentdir,"./best_models/PPO/translation_MP"+MP_name))
+    model = ppo.PPO.load(os.path.join(currentdir,"./best_models/PPO/translation_MP/"+MP_name))
 
     obs,info = env.reset()
     done = False
@@ -45,7 +45,7 @@ def main():
     "Action ([lin_vel, ang_vel]) according to the trained policy is applied for 'j' timesteps and then [0,0] action is applied.\
      Displacement (obs[0]) is observed at the end of (j+1)th timestep"
 
-    for i in range(55):
+    for j in range(55):
         obs,info = env.reset()
         for i in range(j+10):
             if i<=j:

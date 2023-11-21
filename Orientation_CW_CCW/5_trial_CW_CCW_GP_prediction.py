@@ -21,14 +21,15 @@ def main():
         env = turtlebot3_burger_GymEnv_CCW(renders=True, isDiscrete=False)
     else:
         raise SystemExit("Incorrect MP name")
-    #check_env(env
+    #check_env(env)
 
-    model = ppo.PPO.load(os.path.join(currentdir,"./best_models/PPO/orientation_MP_"+MP_name))
+    model = ppo.PPO.load(os.path.join(currentdir,"./best_models/PPO/orientation_MP/"+MP_name))
 
-    GP_ = pickle.load(open(os.path.join(currentdir,"./GP_models/"+MP_name+"/no_noise_exp.dump"), "rb"))
+    GP_ = pickle.load(open(os.path.join(currentdir,"./GP_models/"+MP_name+"/noisy_exp.dump"), "rb"))
     required_yaw = 2.5
     mean_prediction, std_prediction = GP_.predict(np.array([required_yaw]).reshape(1,-1), return_std=True)
-    required_timesteps = round(mean_prediction[0])
+    print(mean_prediction[0][0])
+    required_timesteps = round(mean_prediction[0][0])
 
     obs,info = env.reset()
     done = False

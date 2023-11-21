@@ -28,9 +28,10 @@ def main():
         model.learn(total_timesteps=20)
         temp = evaluate_policy(model,model.env,n_eval_episodes=5)
         if (temp[0]>best):
-            model.save("./best_models/PPO/orientation_MP"+MP_name)
+            model.save("./best_models/PPO/orientation_MP/"+MP_name)
             best=temp[0]
         if (i%9==0):
-            model.save("./models/PPO/orientation_MP_"+MP_name)
+            model.save("./models/PPO/orientation_MP/"+MP_name)
+    model.save("./models/PPO/orientation_MP/"+MP_name)
 if __name__ == '__main__':
     main()

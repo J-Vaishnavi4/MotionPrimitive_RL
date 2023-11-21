@@ -25,7 +25,7 @@ def main():
        os.makedirs("./Samples/"+MP_name)
 
 
-    model = ppo.PPO.load(os.path.join(currentdir,"./best_models/PPO/orientation_MP_"+MP_name))
+    model = ppo.PPO.load(os.path.join(currentdir,"./best_models/PPO/orientation_MP/"+MP_name))
 
     obs,info = env.reset()
     done = False

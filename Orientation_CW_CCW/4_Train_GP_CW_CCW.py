@@ -35,14 +35,14 @@ gaussian_process.fit(X_train, y_train)
 gaussian_process.kernel_
 
 mean_prediction, std_prediction = gaussian_process.predict(X, return_std=True)
-
+# print("dimension ", mean_prediction.ndim, mean_prediction[:,0])
 plt.plot(X, y, label=r"$f(x) = timesteps$", linestyle="dotted")
 plt.scatter(X_train, y_train, label="Observations")
 plt.plot(X, mean_prediction, label="Mean prediction")
 plt.fill_between(
     X.ravel(),
-    mean_prediction - 1.96 * std_prediction,
-    mean_prediction + 1.96 * std_prediction,
+    mean_prediction[:,0] - 1.96 * std_prediction,
+    mean_prediction[:,0] + 1.96 * std_prediction,
     alpha=0.5,
     label=r"95% confidence interval",
 )
@@ -75,8 +75,8 @@ plt.scatter(X_train, y_train_noisy, label = "Observations")
 plt.plot(X, mean_prediction, label="Mean prediction")
 plt.fill_between(
     X.ravel(),
-    mean_prediction - 1.96 * std_prediction,
-    mean_prediction + 1.96 * std_prediction,
+    mean_prediction[:,0] - 1.96 * std_prediction,
+    mean_prediction[:,0] + 1.96 * std_prediction,
     color="tab:orange",
     alpha=0.5,
     label=r"95% confidence interval",

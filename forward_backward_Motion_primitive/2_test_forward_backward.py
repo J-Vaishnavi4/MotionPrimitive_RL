@@ -26,7 +26,7 @@ def main():
         raise SystemExit("Incorrect MP name")
     #check_env(env)
 
-    model = ppo.PPO.load(os.path.join(currentdir,"./best_models/PPO/translation_MP"+MP_name))
+    model = ppo.PPO.load(os.path.join(currentdir,"./best_models/PPO/translation_MP/"+MP_name))
 
     obs,info = env.reset()
     done = False
@@ -49,7 +49,7 @@ def main():
             obs,info = env.reset()
             print("done: ", rew)
             rew=0
-            # break
+            break
 
     env.close()
     plt.subplot(231)

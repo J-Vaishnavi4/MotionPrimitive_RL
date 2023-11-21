@@ -39,8 +39,8 @@ class TurtleBot3:
         linV, angV = self._p.getBaseVelocity(self.robotUniqueId)
         observation.append(list(pos))
         observation.append(self._p.getEulerFromQuaternion(orn)[2])
-        observation.extend(list(linV))
-        observation.extend(list(angV))
+        observation.append(np.linalg.norm(linV))
+        observation.append(np.linalg.norm(angV))
         return observation
 
     def applyAction(self, lin_vel,ang_vel):
