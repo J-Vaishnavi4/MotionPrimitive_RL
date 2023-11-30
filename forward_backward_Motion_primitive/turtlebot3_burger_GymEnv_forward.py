@@ -57,7 +57,7 @@ class turtlebot3_burger_GymEnv_forward(gym.Env):
     if (isDiscrete):
       self.action_space = spaces.Discrete(9)
     else:
-      action_dim = 2 #consider everything as list
+      action_dim = 2
       self._action_bound = 1
       action_high = np.array([self._action_bound]*action_dim)
       self.action_space = spaces.Box(-action_high, action_high, dtype=np.float32)
@@ -66,7 +66,6 @@ class turtlebot3_burger_GymEnv_forward(gym.Env):
 
   def reset(self,seed = None):
     self._p.resetSimulation()
-    #self._p.setPhysicsEngineParameter(numSolverIterations=300)
     self._p.setTimeStep(self._timeStep)
 
     self._p.loadURDF(currentdir+'/turtlebot3_description/urdf/simpleplane.urdf')
@@ -78,14 +77,11 @@ class turtlebot3_burger_GymEnv_forward(gym.Env):
     self._observation = self.getExtendedObservation()
     self._robot_initial_pos = self._observation[0]
     self._initial_orientation = self._observation[1]
-    # print("init theta: ",self._initial_orientation)
     self._observation[0]=0  # initial displacement = 0
     self._observation[1]=0  # initial yaw_change = 0
     info = {}
     info['rew1']=0
     info['rew2']=0
-    # info['rew3']=0
-    # print("vv",info)
     return np.array(self._observation), info
 
   def __del__(self):
@@ -97,16 +93,13 @@ class turtlebot3_burger_GymEnv_forward(gym.Env):
 
   def getExtendedObservation(self):
     self._observation = self._robot.getObservation()
-    # print(self._observation)
     return self._observation
 
   def step(self, action):
-    # print(action)
     if (self._renders):
       basePos, orn = self._p.getBasePositionAndOrientation(self._robot.robotUniqueId)
       d = (abs(np.asarray(basePos)[0] - np.asarray(self._robot_initial_pos)))
-      self._prev_speed = np.sqrt(self._observation[2]**2 + self._observation[3]**2)
-
+      self._prev_speed = self._observation[2]
     if (self._isDiscrete):
       rightVel = [-1, -0.5, -0.1, 0, 0.5, 0.1, 1, 0.2, 0.8]
       leftVel = [-1, -0.5, -0.1, 0, 0.5, 0.1, 1, 0.2, 0.8]
@@ -126,7 +119,7 @@ class turtlebot3_burger_GymEnv_forward(gym.Env):
         break
       self._envStepCounter += 1
     # rew1, rew2, rew3, yaw_change, displacement= self._reward(action)
-    rew1, rew2, yaw_change, displacement = self._reward(action)
+    rew1, rew2, yaw_change, displacement = self._reward2(action)
     reward = min(rew1, rew2)
 
     self._observation[0] = displacement
@@ -204,12 +197,22 @@ class turtlebot3_burger_GymEnv_forward(gym.Env):
     yaw_change = abs(yaw - self._initial_orientation)
     lV, aV = self._p.getBaseVelocity(self._robot.robotUniqueId)
 
-
-    # c1, c2 = self._sign_value(yaw)
     rew1 = int(((abs(np.linalg.norm(lV) - 0.22) < 0.05) or (np.linalg.norm(lV) - self._prev_speed > 0)) and action[0] > 0)
     rew2 = int(yaw_change <= 0.01)
-    # reward = rew1 + rew2 + rew3
     return rew1, rew2, yaw_change, displacement
+
+  def _reward2(self,action):
+    robot_pos,robot_orn = self._p.getBasePositionAndOrientation(self._robot.robotUniqueId)
+    d = (abs(np.asarray(robot_pos) - np.asarray(self._robot_initial_pos)))
+    displacement = math.sqrt(math.pow(d[0],2) + math.pow(d[1],2))
+    yaw = self._p.getEulerFromQuaternion(robot_orn)[2]
+    yaw_change = abs(yaw - self._initial_orientation)
+    lV, aV = self._p.getBaseVelocity(self._robot.robotUniqueId)
+
+    rew1 = action[0] - 1
+    rew2 = 1*int(yaw_change <= 0.01) - 1*int(yaw_change > 0.01)
+    return rew1, rew2, yaw_change, displacement
+  
 
   if parse_version(gym.__version__) < parse_version('0.9.6'):
     _render = render

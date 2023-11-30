@@ -13,7 +13,7 @@ class TurtleBot3:
         self.reset()
 
     def reset(self):
-        euler_offset = (0, 0, 0)
+        euler_offset = (0, 0, math.pi/2)
         quaternion_offset = self._p.getQuaternionFromEuler(euler_offset)
         robot = self._p.loadURDF(currentdir+'/turtlebot3_description/urdf/turtlebot3_waffle.urdf.xacro',[0,0,0],baseOrientation=quaternion_offset)
 

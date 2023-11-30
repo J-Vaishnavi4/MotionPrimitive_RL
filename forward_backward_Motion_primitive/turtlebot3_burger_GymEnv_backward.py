@@ -103,7 +103,7 @@ class turtlebot3_burger_GymEnv_backward(gym.Env):
     if (self._renders):
       basePos, orn = self._p.getBasePositionAndOrientation(self._robot.robotUniqueId)
       d = (abs(np.asarray(basePos)[0] - np.asarray(self._robot_initial_pos)))
-      self._prev_speed = np.sqrt(self._observation[2]**2 + self._observation[3]**2)
+      self._prev_speed = self._observation[2]
 
     if (self._isDiscrete):
       rightVel = [-1, -0.5, -0.1, 0, 0.5, 0.1, 1, 0.2, 0.8]
@@ -123,7 +123,7 @@ class turtlebot3_burger_GymEnv_backward(gym.Env):
       if self._termination():
         break
       self._envStepCounter += 1
-    rew1, rew2, yaw_change, displacement= self._reward(action)
+    rew1, rew2, yaw_change, displacement= self._reward2(action)
     reward = min(rew1, rew2)
 
     self._observation[0] = displacement
@@ -165,7 +165,7 @@ class turtlebot3_burger_GymEnv_backward(gym.Env):
     robot_pos, robot_orn = self._p.getBasePositionAndOrientation(self._robot.robotUniqueId)
     yaw = self._p.getEulerFromQuaternion(robot_orn)[2]
     yaw_change = yaw - self._initial_orientation
-    return self._envStepCounter>5000 or abs(yaw_change)>0.1
+    return abs(yaw_change)>0.1 #self._envStepCounter>5000 #
 
   def _sign_value(self,yaw):
     if abs(yaw) < math.pi/2:
@@ -208,6 +208,19 @@ class turtlebot3_burger_GymEnv_backward(gym.Env):
     # reward = rew1 + rew2 + rew3
 
     return rew1, rew2, yaw_change, displacement
+
+  def _reward2(self,action):
+    robot_pos,robot_orn = self._p.getBasePositionAndOrientation(self._robot.robotUniqueId)
+    d = (abs(np.asarray(robot_pos) - np.asarray(self._robot_initial_pos)))
+    displacement = math.sqrt(math.pow(d[0],2) + math.pow(d[1],2))
+    yaw = self._p.getEulerFromQuaternion(robot_orn)[2]
+    yaw_change = abs(yaw - self._initial_orientation)
+    lV, aV = self._p.getBaseVelocity(self._robot.robotUniqueId)
+
+    rew1 = -action[0]
+    rew2 = 1*int(yaw_change <= 0.05) - 1*int(yaw_change > 0.05)
+    return rew1, rew2, yaw_change, displacement
+  
 
   if parse_version(gym.__version__) < parse_version('0.9.6'):
     _render = render

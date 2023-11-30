@@ -26,7 +26,7 @@ def main():
         raise SystemExit("Incorrect MP name")
     #check_env(env)
 
-    model = ppo.PPO.load(os.path.join(currentdir,"./best_models/PPO/translation_MP/"+MP_name))
+    model = ppo.PPO.load(os.path.join(currentdir,"./models/PPO/translation_MP/"+MP_name+"3 (copy)"))
 
     obs,info = env.reset()
     done = False
@@ -41,6 +41,7 @@ def main():
         rew1.append(info['rew1'])
         rew2.append(info['rew2'])
         # rew3.append(info['rew3'])
+        print(action[1])
         displacement.append(obs[0])
         yaw_change.append(obs[1])
         env.render(mode='human')

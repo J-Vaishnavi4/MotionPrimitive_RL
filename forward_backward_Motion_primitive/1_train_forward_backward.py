@@ -26,15 +26,15 @@ def main():
     check_env(env)
     model = ppo.PPO("MlpPolicy", env, verbose=1)#,tensorboard_log="./tensorboard/PPO/forward_MP_4/")
     best = 0
-    for i in range(200):
+    for i in range(50):
         print("iteration: ",i)
-        model.learn(total_timesteps=1000)
+        model.learn(total_timesteps=50)
         temp = evaluate_policy(model,model.env,n_eval_episodes=5)
         if (temp[0]>best):
-            model.save("./best_models/PPO/translation_MP/"+MP_name)
+            model.save("./best_models/PPO/translation_MP/"+MP_name+"3")
             best=temp[0]
         if (i%10==0):
-            model.save("./models/PPO/translation_MP/"+MP_name)
-        model.save("./models/PPO/translation_MP/"+MP_name)
+            model.save("./models/PPO/translation_MP/"+MP_name+"3")
+        model.save("./models/PPO/translation_MP/"+MP_name+"3")
 if __name__ == '__main__':
     main()
