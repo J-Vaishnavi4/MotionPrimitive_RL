@@ -23,15 +23,18 @@ def main():
     check_env(env)
     model = ppo.PPO("MlpPolicy", env, verbose=1)#,tensorboard_log="./tensorboard/PPO/orientation_MP_CCW/")
     best = 0
-    for i in range(20):
-        print("iteration: ",i)
-        model.learn(total_timesteps=20)
-        temp = evaluate_policy(model,model.env,n_eval_episodes=5)
-        if (temp[0]>best):
-            model.save("./best_models/PPO/orientation_MP/"+MP_name)
-            best=temp[0]
-        if (i%9==0):
-            model.save("./models/PPO/orientation_MP/"+MP_name)
-    model.save("./models/PPO/orientation_MP/"+MP_name)
+    model.learn(total_timesteps=4000)
+    model.save("./models/PPO/orientation_MP/"+MP_name+"4")
+
+    # for i in range(20):
+    #     print("iteration: ",i)
+    #     model.learn(total_timesteps=20)
+    #     temp = evaluate_policy(model,model.env,n_eval_episodes=5)
+    #     if (temp[0]>best):
+    #         model.save("./best_models/PPO/orientation_MP/"+MP_name)
+    #         best=temp[0]
+    #     if (i%9==0):
+    #         model.save("./models/PPO/orientation_MP/"+MP_name)
+    # model.save("./models/PPO/orientation_MP/"+MP_name)
 if __name__ == '__main__':
     main()

@@ -26,7 +26,7 @@ def main():
         raise SystemExit("Incorrect MP name")
     #check_env(env)
 
-    model = ppo.PPO.load(os.path.join(currentdir,"./models/PPO/translation_MP/"+MP_name+"3 (copy)"))
+    model = ppo.PPO.load(os.path.join(currentdir,"./models/PPO/translation_MP/"+MP_name+"16"))
 
     obs,info = env.reset()
     done = False
@@ -34,21 +34,21 @@ def main():
     rew1, rew2, reward_plot = [info['rew1']], [info['rew2']], [0]
     displacement, yaw_change = [obs[0]], [obs[1]]
 
-    for i in range(10000):
+    for i in range(100):
         action, _states = model.predict(obs, deterministic=True)
         obs, reward, done,truncated, info = env.step(action)
         reward_plot.append(reward)
         rew1.append(info['rew1'])
         rew2.append(info['rew2'])
         # rew3.append(info['rew3'])
-        print(action[1])
+        # print(action[1])
         displacement.append(obs[0])
         yaw_change.append(obs[1])
         env.render(mode='human')
         rew+=reward
         if done:
             obs,info = env.reset()
-            print("done: ", rew)
+            # print("done: ", rew)
             rew=0
             break
 

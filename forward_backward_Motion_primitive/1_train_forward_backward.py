@@ -12,29 +12,50 @@ import datetime
 from stable_baselines3 import ppo
 from stable_baselines3.common.env_checker import check_env
 from stable_baselines3.common.evaluation import evaluate_policy
+from gymnasium.envs.registration import register
+from stable_baselines3.common.env_util import make_vec_env
 
 def main():
+
     MP_name = input("Forward(F)/ Backward (B) MP: ")
     if MP_name == "F":
         MP_name = "Forward"
+        # register(
+        #     # unique identifier for the env `name-version`
+        #     id="Turtlebot_waffle-F-v0",
+        #     # path to the class for creating the env
+        #     # Note: entry_point also accept a class as input (and not only a string)
+        #     entry_point="turtlebot3_burger_GymEnv_forward:turtlebot3_burger_GymEnv_forward",
+        # )
+        # env = make_vec_env("Turtlebot_waffle-F-v0", n_envs = 4, seed = 0, env_kwargs={"renders":True, "isDiscrete":False})
         env = turtlebot3_burger_GymEnv_forward(renders=True, isDiscrete=False)
     elif MP_name == "B":
         MP_name = "Backward"
+        # register(
+        #     # unique identifier for the env `name-version`
+        #     id="Turtlebot_waffle-B-v0",
+        #     # path to the class for creating the env
+        #     # Note: entry_point also accept a class as input (and not only a string)
+        #     entry_point="turtlebot3_burger_GymEnv_backward:turtlebot3_burger_GymEnv_backward",
+        # )
+        # env = make_vec_env("Turtlebot_waffle-B-v0", n_envs = 4, seed = 0, env_kwargs={"renders":True, "isDiscrete":False})
         env = turtlebot3_burger_GymEnv_backward(renders=True, isDiscrete=False)
     else:
         raise SystemExit("Incorrect MP name")
-    check_env(env)
+    # check_env(env)
     model = ppo.PPO("MlpPolicy", env, verbose=1)#,tensorboard_log="./tensorboard/PPO/forward_MP_4/")
     best = 0
-    for i in range(50):
-        print("iteration: ",i)
-        model.learn(total_timesteps=50)
-        temp = evaluate_policy(model,model.env,n_eval_episodes=5)
-        if (temp[0]>best):
-            model.save("./best_models/PPO/translation_MP/"+MP_name+"3")
-            best=temp[0]
-        if (i%10==0):
-            model.save("./models/PPO/translation_MP/"+MP_name+"3")
-        model.save("./models/PPO/translation_MP/"+MP_name+"3")
+    model.learn(total_timesteps=1000)
+    model.save("./models/PPO/translation_MP/"+MP_name+"16")
+    # for i in range(20):
+    #     print("iteration: ",i)
+    #     model.learn(total_timesteps=100)
+    #     temp = evaluate_policy(model,model.env,n_eval_episodes=5)
+    #     if (temp[0]>best):
+    #         model.save("./best_models/PPO/translation_MP/"+MP_name+"6")
+    #         best=temp[0]
+    #     if (i%10==0):
+    #         model.save("./models/PPO/translation_MP/"+MP_name+"6")
+    #     model.save("./models/PPO/translation_MP/"+MP_name+"6")
 if __name__ == '__main__':
     main()

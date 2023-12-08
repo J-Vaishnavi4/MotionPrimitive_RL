@@ -26,7 +26,7 @@ class turtlebot3_burger_GymEnv_CCW(gym.Env):
 
   def __init__(self,
                urdfRoot=pybullet_data.getDataPath(),
-               actionRepeat=1,
+               actionRepeat=50,
                isEnableSelfCollision=True,
                isDiscrete=False,
                renders=False):
@@ -48,8 +48,8 @@ class turtlebot3_burger_GymEnv_CCW(gym.Env):
     else:
       self._p = bc.BulletClient()
 
-    self.seed()
-    # self.reset()
+    # self.seed()
+    self.reset()
     observationDim = 4      # displacement, yaw_change, Lin_vel, ang_vel
     observation_high = np.ones(observationDim) * 10  #np.inf
     if (isDiscrete):
@@ -114,7 +114,7 @@ class turtlebot3_burger_GymEnv_CCW(gym.Env):
       if self._termination():
         break
       self._envStepCounter += 1
-    reward, yaw_change, displacement = self._reward()
+    reward, yaw_change, displacement = self._reward(action)
     self._observation[0] = displacement
     self._observation[1] = yaw_change
     done = self._termination()
@@ -148,11 +148,11 @@ class turtlebot3_burger_GymEnv_CCW(gym.Env):
     robot_pos, robot_orn = self._p.getBasePositionAndOrientation(self._robot.robotUniqueId)
     d = (abs(np.asarray(robot_pos) - np.asarray(self._robot_initial_pos)))
     displacement = math.sqrt(math.pow(d[0],2) + math.pow(d[1],2))
-    if displacement>=0.15:
-      print("terminated because of displacement")
-    return displacement>=0.15 or self._envStepCounter>5000
+    # if displacement>=0.15:
+      # print("terminated because of displacement")
+    return displacement>=0.1 #or self._envStepCounter>5000
 
-  def _reward(self):
+  def _reward(self,action):
     robot_pos,robot_orn = self._p.getBasePositionAndOrientation(self._robot.robotUniqueId)
     d = (abs(np.asarray(robot_pos) - np.asarray(self._robot_initial_pos)))
     displacement = math.sqrt(math.pow(d[0],2) + math.pow(d[1],2))
@@ -167,11 +167,14 @@ class turtlebot3_burger_GymEnv_CCW(gym.Env):
     " rew2: Angular velocity should be positive for counter clockwise rotation"
     " rew3: Robot should slow down as it is close to completing the 360 degree rotation"
 
-    rew1 = -1000*(displacement)                               # penalizing linear displacement from initial position
-    rew2 = 1000*(yaw_change)*(aV[2])*(yaw_change <= 0.7*2*math.pi) + 500*(yaw_change)*(aV[2])*(0.7*2*math.pi < yaw_change<=0.85*2*math.pi) + (50*yaw_change)*(aV[2])*(0.85*2*math.pi < yaw_change <= 2*math.pi)
-    rew3 = (0.85*2*math.pi < yaw_change < 2*math.pi)*(aV[2])*(abs(self.prev_ang_vel)-abs(aV[2]))*1000
+    rew1 = -2*(displacement)                               # penalizing linear displacement from initial position
+    rew2 = action[1]
+    
+    # rew1 = -1000*(displacement)                               # penalizing linear displacement from initial position
+    # rew2 = 1000*(yaw_change)*(aV[2])*(yaw_change <= 0.7*2*math.pi) + 500*(yaw_change)*(aV[2])*(0.7*2*math.pi < yaw_change<=0.85*2*math.pi) + (50*yaw_change)*(aV[2])*(0.85*2*math.pi < yaw_change <= 2*math.pi)
+    # rew3 = (0.85*2*math.pi < yaw_change < 2*math.pi)*(aV[2])*(abs(self.prev_ang_vel)-abs(aV[2]))*1000
 
-    reward = rew1 + rew2 + rew3
+    reward = rew1+rew2
     return reward, yaw_change, displacement
 
   if parse_version(gym.__version__) < parse_version('0.9.6'):

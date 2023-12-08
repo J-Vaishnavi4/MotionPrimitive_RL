@@ -6,6 +6,7 @@ os.sys.path.insert(0, parentdir)
 
 from turtlebot3_burger_GymEnv_CW import turtlebot3_burger_GymEnv_CW
 from turtlebot3_burger_GymEnv_CCW import turtlebot3_burger_GymEnv_CCW
+import matplotlib.pyplot as plt
 
 import datetime
 from stable_baselines3 import ppo
@@ -21,23 +22,34 @@ def main():
         raise SystemExit("Incorrect MP name")
     #check_env(env)
 
-    model = ppo.PPO.load(os.path.join(currentdir,"./best_models/PPO/orientation_MP/"+MP_name))
+    model = ppo.PPO.load(os.path.join(currentdir,"./models/PPO/orientation_MP/"+MP_name+"4"))
 
     obs,info = env.reset()
     done = False
     rew=0
+    displacement, yaw_change = [obs[0]], [obs[1]]
 
-    for i in range(10000):
+    for i in range(100):
         action, _states = model.predict(obs, deterministic=True)
         obs, reward, done,truncated, info = env.step(action)
+        displacement.append(obs[0])
+        yaw_change.append(obs[1])
         env.render(mode='human')
         rew+=reward
         if done:
             obs,info = env.reset()
             print("done: ", rew)
             rew=0
+            break
+    env.close()
 
-        env.close()
+    plt.subplot(211)
+    plt.plot(displacement)
+    plt.grid()
+    plt.subplot(212)
+    plt.plot(yaw_change)
+    plt.grid()
+    plt.show()
 
 if __name__ == '__main__':
     main()

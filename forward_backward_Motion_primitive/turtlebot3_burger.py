@@ -13,9 +13,9 @@ class TurtleBot3:
         self.reset()
 
     def reset(self):
-        euler_offset = (0, 0, math.pi/2)
+        euler_offset = (0, 0, 0)
         quaternion_offset = self._p.getQuaternionFromEuler(euler_offset)
-        robot = self._p.loadURDF(currentdir+'/turtlebot3_description/urdf/turtlebot3_waffle.urdf.xacro',[0,0,0],baseOrientation=quaternion_offset)
+        robot = self._p.loadURDF(currentdir+'/turtlebot3_description/urdf/turtlebot3_burger.urdf.xacro',[0,0,0],baseOrientation=quaternion_offset)
 
         self.robotUniqueId = robot
 
@@ -45,10 +45,10 @@ class TurtleBot3:
         return observation
 
     def applyAction(self, lin_vel,ang_vel):
-        L = 0.288
+        L = 0.160
         R = 0.033
         lin_vel = 0.22*lin_vel
-        ang_vel = 2.63*ang_vel
+        ang_vel = 2.84*ang_vel
         targetVelocityRight = (2*lin_vel + ang_vel*L)/(2*R) * self.speedMultiplierLeft
         targetVelocityLeft = (2*lin_vel - ang_vel*L)/(2*R) * self.speedMultiplierLeft
 

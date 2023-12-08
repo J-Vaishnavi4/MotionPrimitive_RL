@@ -17,6 +17,7 @@ import random
 from pybullet_utils import bullet_client as bc
 import pybullet_data
 from pkg_resources import parse_version
+import csv
 
 
 
@@ -46,11 +47,11 @@ class turtlebot3_burger_GymEnv_forward(gym.Env):
     self._cam_yaw = 50
     self._cam_pitch = -35
     if self._renders:
-      self._p = bc.BulletClient(connection_mode=pybullet.GUI)
+      self._p = bc.BulletClient(connection_mode=pybullet.DIRECT)
     else:
       self._p = bc.BulletClient()
 
-    self.seed()
+    # self.seed()
     self.reset()
     observationDim = 4      # displacement, yaw_change, Lin_vel, Ang_vel
     observation_high = np.ones(observationDim) * 10  #np.inf
@@ -63,7 +64,11 @@ class turtlebot3_burger_GymEnv_forward(gym.Env):
       self.action_space = spaces.Box(-action_high, action_high, dtype=np.float32)
     self.observation_space = spaces.Box(-observation_high, observation_high, dtype=float)
     self.viewer = None
-
+    # if not os.path.exists("./reward/"):
+    #    os.makedirs("./reward/")
+    # with open("./reward/reward_FMP_6.csv",'w',newline='') as file:
+    #   writer = csv.writer(file)
+  
   def reset(self,seed = None):
     self._p.resetSimulation()
     self._p.setTimeStep(self._timeStep)
@@ -79,6 +84,7 @@ class turtlebot3_burger_GymEnv_forward(gym.Env):
     self._initial_orientation = self._observation[1]
     self._observation[0]=0  # initial displacement = 0
     self._observation[1]=0  # initial yaw_change = 0
+    # self.reward_value=0
     info = {}
     info['rew1']=0
     info['rew2']=0
@@ -119,12 +125,18 @@ class turtlebot3_burger_GymEnv_forward(gym.Env):
         break
       self._envStepCounter += 1
     # rew1, rew2, rew3, yaw_change, displacement= self._reward(action)
-    rew1, rew2, yaw_change, displacement = self._reward2(action)
+    rew1, rew2, yaw_change, displacement = self._reward(action)
     reward = min(rew1, rew2)
-
+    # self.reward_value += reward
     self._observation[0] = displacement
     self._observation[1] = yaw_change
     done = self._termination()
+    # if done:
+    #   with open("./reward/reward_FMP_6.csv",'a',newline='') as file:
+    #     writer = csv.writer(file)
+    #     writer.writerow(np.array([self.reward_value]))
+    #     file.close()
+    #   self.reward_value = 0
     # if yaw_change>0.1:
     #   print("displacement: ", displacement, yaw_change)
     truncated = done
@@ -160,8 +172,9 @@ class turtlebot3_burger_GymEnv_forward(gym.Env):
   def _termination(self):
     robot_pos, robot_orn = self._p.getBasePositionAndOrientation(self._robot.robotUniqueId)
     yaw = self._p.getEulerFromQuaternion(robot_orn)[2]
-    yaw_change = abs(yaw - self._initial_orientation)
-    return self._envStepCounter>5000 or yaw_change > 0.1
+    yaw_change = abs(abs(yaw) - abs(self._initial_orientation))
+    # print(self._envStepCounter)
+    return yaw_change > 0.1 # or self._envStepCounter>10000 
 
   def _sign_value(self,yaw):
     if abs(yaw) < math.pi/2:
@@ -189,16 +202,15 @@ class turtlebot3_burger_GymEnv_forward(gym.Env):
 
     return c1, c2
 
-  def _reward(self,action):
+  def _reward(self, action):
     robot_pos,robot_orn = self._p.getBasePositionAndOrientation(self._robot.robotUniqueId)
     d = (abs(np.asarray(robot_pos) - np.asarray(self._robot_initial_pos)))
     displacement = math.sqrt(math.pow(d[0],2) + math.pow(d[1],2))
     yaw = self._p.getEulerFromQuaternion(robot_orn)[2]
-    yaw_change = abs(yaw - self._initial_orientation)
-    lV, aV = self._p.getBaseVelocity(self._robot.robotUniqueId)
+    yaw_change = abs(abs(yaw) - abs(self._initial_orientation))
 
-    rew1 = int(((abs(np.linalg.norm(lV) - 0.22) < 0.05) or (np.linalg.norm(lV) - self._prev_speed > 0)) and action[0] > 0)
-    rew2 = int(yaw_change <= 0.01)
+    rew1 = 1*action[0]# - 1
+    rew2 = np.clip(-20*(yaw_change-0.05), -2, 1)
     return rew1, rew2, yaw_change, displacement
 
   def _reward2(self,action):
@@ -206,11 +218,11 @@ class turtlebot3_burger_GymEnv_forward(gym.Env):
     d = (abs(np.asarray(robot_pos) - np.asarray(self._robot_initial_pos)))
     displacement = math.sqrt(math.pow(d[0],2) + math.pow(d[1],2))
     yaw = self._p.getEulerFromQuaternion(robot_orn)[2]
-    yaw_change = abs(yaw - self._initial_orientation)
-    lV, aV = self._p.getBaseVelocity(self._robot.robotUniqueId)
+    yaw_change = abs(abs(yaw) - abs(self._initial_orientation))
+    # lV, aV = self._p.getBaseVelocity(self._robot.robotUniqueId)
 
-    rew1 = action[0] - 1
-    rew2 = 1*int(yaw_change <= 0.01) - 1*int(yaw_change > 0.01)
+    rew1 = action[0] #- 1
+    rew2 = 1*int(yaw_change <= 0.05) - 1*int(yaw_change > 0.05)
     return rew1, rew2, yaw_change, displacement
   
 
