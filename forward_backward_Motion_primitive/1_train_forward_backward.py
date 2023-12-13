@@ -43,10 +43,10 @@ def main():
     else:
         raise SystemExit("Incorrect MP name")
     # check_env(env)
-    model = ppo.PPO("MlpPolicy", env, verbose=1)#,tensorboard_log="./tensorboard/PPO/forward_MP_4/")
+    model = ppo.PPO("MlpPolicy", env, verbose=1,tensorboard_log="./tensorboard/PPO/forward_MP_26/")
     best = 0
-    model.learn(total_timesteps=1000)
-    model.save("./models/PPO/translation_MP/"+MP_name+"16")
+    model.learn(total_timesteps=4000000)
+    model.save("./models/PPO/translation_MP/"+MP_name+"26")
     # for i in range(20):
     #     print("iteration: ",i)
     #     model.learn(total_timesteps=100)

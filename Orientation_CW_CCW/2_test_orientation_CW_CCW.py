@@ -22,32 +22,41 @@ def main():
         raise SystemExit("Incorrect MP name")
     #check_env(env)
 
-    model = ppo.PPO.load(os.path.join(currentdir,"./models/PPO/orientation_MP/"+MP_name+"4"))
+    model = ppo.PPO.load(os.path.join(currentdir,"./best_models/PPO/orientation_MP/"+MP_name))
 
     obs,info = env.reset()
     done = False
-    rew=0
+    total_rew=0
     displacement, yaw_change = [obs[0]], [obs[1]]
-
-    for i in range(100):
+    rew = []
+    for i in range(20):
         action, _states = model.predict(obs, deterministic=True)
         obs, reward, done,truncated, info = env.step(action)
         displacement.append(obs[0])
         yaw_change.append(obs[1])
         env.render(mode='human')
-        rew+=reward
+        total_rew+=reward
+        print("act: ",action[1], reward)
+        rew.append(reward)
         if done:
             obs,info = env.reset()
             print("done: ", rew)
-            rew=0
+            total_rew=0
             break
     env.close()
-
-    plt.subplot(211)
+    # print(rew)
+    print(total_rew)
+    plt.subplot(221)
     plt.plot(displacement)
+    plt.title("displacement")
     plt.grid()
-    plt.subplot(212)
+    plt.subplot(222)
     plt.plot(yaw_change)
+    plt.title("yaw_change")
+    plt.grid()
+    plt.subplot(223)
+    plt.plot(rew)
+    plt.title("reward")
     plt.grid()
     plt.show()
 

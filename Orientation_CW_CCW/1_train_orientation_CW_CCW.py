@@ -23,8 +23,8 @@ def main():
     check_env(env)
     model = ppo.PPO("MlpPolicy", env, verbose=1)#,tensorboard_log="./tensorboard/PPO/orientation_MP_CCW/")
     best = 0
-    model.learn(total_timesteps=4000)
-    model.save("./models/PPO/orientation_MP/"+MP_name+"4")
+    model.learn(total_timesteps=1000000)
+    model.save("./models/PPO/orientation_MP/"+MP_name+"12")
 
     # for i in range(20):
     #     print("iteration: ",i)

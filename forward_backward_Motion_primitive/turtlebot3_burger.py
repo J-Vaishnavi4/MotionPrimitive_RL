@@ -22,8 +22,8 @@ class TurtleBot3:
         self.Wheels = [1,2] #1 is left 2 is right
         self.maxForce = 350
         self.nMotors = 2
-        self.speedMultiplierRight = 0.5*1
-        self.speedMultiplierLeft = 0.5*1
+        self.speedMultiplierRight = 1*1
+        self.speedMultiplierLeft = 1*1
 
         #no. of actions
         self.no_of_actions = 2
@@ -51,5 +51,5 @@ class TurtleBot3:
         ang_vel = 2.84*ang_vel
         targetVelocityRight = (2*lin_vel + ang_vel*L)/(2*R) * self.speedMultiplierLeft
         targetVelocityLeft = (2*lin_vel - ang_vel*L)/(2*R) * self.speedMultiplierLeft
-
+        # print("left and right wheel velocities: ", targetVelocityLeft, targetVelocityRight, targetVelocityLeft-targetVelocityRight)
         self._p.setJointMotorControlArray(self.robotUniqueId,[1,2],self._p.VELOCITY_CONTROL, targetVelocities=[targetVelocityLeft,targetVelocityRight],forces=[self.maxForce,self.maxForce])

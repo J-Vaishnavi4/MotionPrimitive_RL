@@ -21,8 +21,8 @@ class TurtleBot3:
         self.Wheels = [1,2] #1 is left 2 is right
         self.maxForce = 350
         self.nMotors = 2
-        self.speedMultiplierRight = 0.5*1
-        self.speedMultiplierLeft = 0.5*1
+        self.speedMultiplierRight = 1*1
+        self.speedMultiplierLeft = 1*1
 
         #no. of actions
         self.no_of_actions = 2

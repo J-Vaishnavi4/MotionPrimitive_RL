@@ -26,20 +26,24 @@ def main():
         raise SystemExit("Incorrect MP name")
     #check_env(env)
 
-    model = ppo.PPO.load(os.path.join(currentdir,"./models/PPO/translation_MP/"+MP_name+"16"))
+    model = ppo.PPO.load(os.path.join(currentdir,"./models/PPO/translation_MP/"+MP_name+"25"))
 
     obs,info = env.reset()
     done = False
     rew=0
-    rew1, rew2, reward_plot = [info['rew1']], [info['rew2']], [0]
+    rew1, rew2, reward_plot, ld = [info['rew1']], [info['rew2']], [0], [info['ld']]
     displacement, yaw_change = [obs[0]], [obs[1]]
 
-    for i in range(100):
+    for i in range(2000):
         action, _states = model.predict(obs, deterministic=True)
+        print("obs: ",obs)
+        print("action: ",action)
         obs, reward, done,truncated, info = env.step(action)
+        
         reward_plot.append(reward)
         rew1.append(info['rew1'])
         rew2.append(info['rew2'])
+        ld.append(info['ld'])
         # rew3.append(info['rew3'])
         # print(action[1])
         displacement.append(obs[0])
@@ -51,7 +55,7 @@ def main():
             # print("done: ", rew)
             rew=0
             break
-
+    print(ld)
     env.close()
     plt.subplot(231)
     plt.plot(reward_plot)
@@ -65,10 +69,10 @@ def main():
     plt.plot(rew2)
     plt.title('rew2')
     plt.grid()
-    # plt.subplot(234)
-    # plt.plot(rew3)
-    # plt.title('rew3')
-    # plt.grid()
+    plt.subplot(234)
+    plt.plot(ld)
+    plt.title('ld')
+    plt.grid()
     plt.subplot(235)
     plt.plot(displacement)
     plt.title('displacement')
