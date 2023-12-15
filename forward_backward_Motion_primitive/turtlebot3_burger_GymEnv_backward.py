@@ -28,7 +28,7 @@ class turtlebot3_burger_GymEnv_backward(gym.Env):
 
   def __init__(self,
                urdfRoot=pybullet_data.getDataPath(),
-               actionRepeat=50,
+               actionRepeat=1,
                isEnableSelfCollision=True,
                isDiscrete=False,
                renders=False):
@@ -46,7 +46,7 @@ class turtlebot3_burger_GymEnv_backward(gym.Env):
     self._cam_yaw = 50
     self._cam_pitch = -35
     if self._renders:
-      self._p = bc.BulletClient(connection_mode=pybullet.DIRECT)
+      self._p = bc.BulletClient(connection_mode=pybullet.GUI)
     else:
       self._p = bc.BulletClient()
 
@@ -91,7 +91,7 @@ class turtlebot3_burger_GymEnv_backward(gym.Env):
     info = {}
     info['rew1']=0
     info['rew2']=0
-
+    info['ld'] = 0
     # info['rew3']=0
     return np.array(self._observation),info
 
@@ -121,7 +121,7 @@ class turtlebot3_burger_GymEnv_backward(gym.Env):
     else:
       realaction = action
 
-    self._robot.applyAction(-realaction[0],-realaction[1])
+    self._robot.applyAction(realaction[0],realaction[1])
     for i in range(self._actionRepeat):
       self._p.stepSimulation()
       time.sleep(self._timeStep)
@@ -131,8 +131,8 @@ class turtlebot3_burger_GymEnv_backward(gym.Env):
         break
       self._envStepCounter += 1
     # print(self._envStepCounter)
-    rew1, rew2, yaw_change, displacement= self._reward(action)
-    reward = min(rew1, rew2)
+    rew1, rew2, yaw_change, lateral_deviation, displacement= self._reward2(action)
+    reward = rew1 + rew2
     # reward = rew1*rew2
     # self.reward_value += reward
     self._observation[0] = displacement
@@ -150,6 +150,7 @@ class turtlebot3_burger_GymEnv_backward(gym.Env):
     info = {}
     info['rew1']=rew1
     info['rew2']=rew2
+    info['ld'] = lateral_deviation
     # info['rew3']=rew3
     return np.array(self._observation), reward, done, truncated, info
 
@@ -180,7 +181,12 @@ class turtlebot3_burger_GymEnv_backward(gym.Env):
     robot_pos, robot_orn = self._p.getBasePositionAndOrientation(self._robot.robotUniqueId)
     yaw = self._p.getEulerFromQuaternion(robot_orn)[2]
     yaw_change = abs(abs(yaw) - abs(self._initial_orientation))
-    return self._envStepCounter>10000 or yaw_change>0.1
+    d = (abs(np.asarray(robot_pos) - np.asarray(self._robot_initial_pos)))
+    displacement = math.sqrt(math.pow(d[0],2) + math.pow(d[1],2))
+    theta = math.atan((robot_pos[1]-self._robot_initial_pos[1])/(robot_pos[0]-self._robot_initial_pos[0]))
+    alpha = self._initial_orientation - theta
+    lateral_deviation = abs(displacement*math.sin(alpha))
+    return lateral_deviation > 0.01 or yaw_change > 0.05
 
   def _sign_value(self,yaw):
     if abs(yaw) < math.pi/2:
@@ -227,10 +233,12 @@ class turtlebot3_burger_GymEnv_backward(gym.Env):
     yaw = self._p.getEulerFromQuaternion(robot_orn)[2]
     yaw_change = abs(abs(yaw) - abs(self._initial_orientation))
     lV, aV = self._p.getBaseVelocity(self._robot.robotUniqueId)
-
-    rew1 = -action[0]
-    rew2 = 4#1*int(yaw_change <= 0.05) - 1*int(yaw_change > 0.05)
-    return rew1, rew2, yaw_change, displacement
+    theta = math.atan((robot_pos[1]-self._robot_initial_pos[1])/(robot_pos[0]-self._robot_initial_pos[0]))
+    alpha = self._initial_orientation - theta
+    lateral_deviation = abs(displacement*math.sin(alpha))
+    rew1 = -5*action[0]
+    rew2 = -100*yaw_change - 100*lateral_deviation#1*int(yaw_change <= 0.05) - 1*int(yaw_change > 0.05)
+    return rew1, rew2, yaw_change, lateral_deviation, displacement
   
 
   if parse_version(gym.__version__) < parse_version('0.9.6'):

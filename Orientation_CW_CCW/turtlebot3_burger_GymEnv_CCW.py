@@ -44,7 +44,7 @@ class turtlebot3_burger_GymEnv_CCW(gym.Env):
     self._cam_yaw = 50
     self._cam_pitch = -35
     if self._renders:
-      self._p = bc.BulletClient(connection_mode=pybullet.GUI)
+      self._p = bc.BulletClient(connection_mode=pybullet.DIRECT)
     else:
       self._p = bc.BulletClient()
 
@@ -192,7 +192,7 @@ class turtlebot3_burger_GymEnv_CCW(gym.Env):
     else:
       yaw_change = yaw - self._initial_orientation
 
-    reward = action[1] - 20*displacement
+    reward = action[1] - 10*displacement
     return reward, yaw_change, displacement
 
   if parse_version(gym.__version__) < parse_version('0.9.6'):

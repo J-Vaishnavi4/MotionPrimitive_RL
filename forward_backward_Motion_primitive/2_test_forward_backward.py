@@ -11,7 +11,7 @@ from turtlebot3_burger_GymEnv_forward import turtlebot3_burger_GymEnv_forward
 from turtlebot3_burger_GymEnv_backward import turtlebot3_burger_GymEnv_backward
 
 import datetime
-from stable_baselines3 import ppo
+from stable_baselines3 import ppo, SAC
 from stable_baselines3.common.env_checker import check_env
 
 def main():
@@ -26,7 +26,7 @@ def main():
         raise SystemExit("Incorrect MP name")
     #check_env(env)
 
-    model = ppo.PPO.load(os.path.join(currentdir,"./models/PPO/translation_MP/"+MP_name+"25"))
+    model = SAC.load(os.path.join(currentdir,"./models/SAC/translation_MP/"+MP_name+"32"))
 
     obs,info = env.reset()
     done = False

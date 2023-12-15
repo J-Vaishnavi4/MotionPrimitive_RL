@@ -9,7 +9,7 @@ from turtlebot3_burger_GymEnv_forward import turtlebot3_burger_GymEnv_forward
 from turtlebot3_burger_GymEnv_backward import turtlebot3_burger_GymEnv_backward
 
 import datetime
-from stable_baselines3 import ppo
+from stable_baselines3 import ppo, SAC
 from stable_baselines3.common.env_checker import check_env
 from stable_baselines3.common.evaluation import evaluate_policy
 from gymnasium.envs.registration import register
@@ -43,10 +43,10 @@ def main():
     else:
         raise SystemExit("Incorrect MP name")
     # check_env(env)
-    model = ppo.PPO("MlpPolicy", env, verbose=1,tensorboard_log="./tensorboard/PPO/forward_MP_26/")
-    best = 0
-    model.learn(total_timesteps=4000000)
-    model.save("./models/PPO/translation_MP/"+MP_name+"26")
+    model = SAC("MlpPolicy", env, verbose=1)#,tensorboard_log="./tensorboard/PPO/forward_MP_31/")
+    # best = 0
+    model.learn(total_timesteps=300000)
+    model.save("./models/SAC/translation_MP/"+MP_name+"33")
     # for i in range(20):
     #     print("iteration: ",i)
     #     model.learn(total_timesteps=100)
