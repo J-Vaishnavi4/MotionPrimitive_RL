@@ -13,9 +13,15 @@ class TurtleBot3:
         self.reset()
 
     def reset(self):
-        euler_offset = (0, 0, 0)
+        init_angle =np.random.uniform(low=-math.pi, high=math.pi)
+        init_x =np.random.uniform(low=-100, high=100)
+        init_y =np.random.uniform(low=-100, high=100)
+        # init_angle, init_x, init_y = -1.138214407202498, -5.726495713586985, -51.814113092004945  #CCW Sample
+        # init_angle, init_x, init_y = -0.809946694764633, 17.196942333320962, 51.16743580960241      #CW Sample
+        euler_offset = (0, 0, init_angle)
         quaternion_offset = self._p.getQuaternionFromEuler(euler_offset)
-        robot = self._p.loadURDF(currentdir+'/turtlebot3_description/urdf/turtlebot3_burger.urdf.xacro',[0,0,0],baseOrientation=quaternion_offset)
+        robot = self._p.loadURDF(currentdir+'/turtlebot3_description/urdf/turtlebot3_burger.urdf.xacro',[init_x,init_y,0],baseOrientation=quaternion_offset)
+        # print(init_angle, init_x, init_y)
         self.robotUniqueId = robot
 
         self.Wheels = [1,2] #1 is left 2 is right

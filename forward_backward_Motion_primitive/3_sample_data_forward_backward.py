@@ -23,8 +23,10 @@ def main():
     else:
         raise SystemExit("Incorrect MP name")
     #check_env(env)
+    if not os.path.exists("./Samples/"+MP_name):
+       os.makedirs("./Samples/"+MP_name)
 
-    model = ppo.PPO.load(os.path.join(currentdir,"./best_models/PPO/translation_MP/"+MP_name))
+    model = ppo.PPO.load(os.path.join(currentdir,"./best_models/PPO/translation_MP/"+MP_name+"2 (copy)"))
 
     obs,info = env.reset()
     done = False
@@ -32,22 +34,22 @@ def main():
     # rew1, rew2, rew3, reward_plot = [info['rew1']], [info['rew2']], [info['rew3']], [0]
     # displacement, yaw_change = [obs[0]], [obs[1]]
 
-    with open("./Samples/"+MP_name+'/samples.csv','w',newline='') as file:
+    with open("./Samples/"+MP_name+'/samples_2_1.csv','w',newline='') as file:
         writer = csv.writer(file)
         writer.writerow(["displacement", "time"])
     action = [0,0]
     data = obs[0]
     data = np.append(data, 0)
-    with open("./Samples/"+MP_name+'/samples.csv','a', newline='') as file:
+    with open("./Samples/"+MP_name+'/samples_2_1.csv','a', newline='') as file:
         writer = csv.writer(file)
         writer.writerow(data)
         file.close()
     "Action ([lin_vel, ang_vel]) according to the trained policy is applied for 'j' timesteps and then [0,0] action is applied.\
      Displacement (obs[0]) is observed at the end of (j+1)th timestep"
 
-    for j in range(55):
+    for j in range(3000):
         obs,info = env.reset()
-        for i in range(j+10):
+        for i in range(j+2):
             if i<=j:
                 action, _states = model.predict(obs, deterministic=True)
                 obs, reward, done,truncated, info = env.step(action)
@@ -58,7 +60,7 @@ def main():
             if i == j+1:
                 data = obs[0]
                 data = np.append(data, i)
-                with open("./Samples/"+MP_name+'/samples.csv','a', newline='') as file:
+                with open("./Samples/"+MP_name+'/samples_2_1.csv','a', newline='') as file:
                     writer = csv.writer(file)
                     writer.writerow(data)
                     file.close()

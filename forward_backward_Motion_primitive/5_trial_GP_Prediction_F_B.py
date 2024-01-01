@@ -12,6 +12,8 @@ from stable_baselines3 import ppo
 from stable_baselines3.common.env_checker import check_env
 import pickle
 import numpy as np
+import matplotlib.pyplot as plt
+import math
 
 def main():
 
@@ -26,32 +28,49 @@ def main():
         raise SystemExit("Incorrect MP name")
     #check_env(env
 
-    model = ppo.PPO.load(os.path.join(currentdir,"./best_models/PPO/translation_MP"+MP_name))
+    model = ppo.PPO.load(os.path.join(currentdir,"./best_models/PPO/translation_MP/"+MP_name+"2 (copy)"))
 
-    GP_ = pickle.load(open(os.path.join(currentdir,"./GP_models/"+MP_name+"/noisy_exp.dump"), "rb"))
-    required_displacement = 1.5
+    GP_ = pickle.load(open(os.path.join(currentdir,"./GP_models/"+MP_name+"/noisy_exp_2_1.dump"), "rb"))
+    required_displacement = 1.8
     mean_prediction, std_prediction = GP_.predict(np.array([required_displacement]).reshape(1,-1), return_std=True)
-    required_timesteps = round(mean_prediction[0])-1
+    print(mean_prediction[0])
+    required_timesteps = round(mean_prediction[0][0])+1
 
     obs,info = env.reset()
     done = False
     rew=0
+    ld, x, y = [info['ld']], [info['x']], [info['y']]
 
-    for j in range(100):
+    for j in range(1000):
 
         if j <= required_timesteps:
             action, _states = model.predict(obs, deterministic=True)
             obs, reward, done,truncated, info = env.step(action)
-
+            ld.append(info['ld'])
+            x.append(info['x'])
+            y.append(info['y'])
         else:
             action = [0,0]
             obs, reward, done,truncated, info = env.step(action)
         if j == required_timesteps:
-            print("Required displacement: "+ str(required_yaw)+"\nPredicted timesteps: "+str(required_timesteps)+ \
+            print("Required displacement: "+ str(required_displacement)+"\nPredicted timesteps: "+str(required_timesteps)+ \
             "\nstandard deviation: "+str(std_prediction[0]))
             print("Actual displacement: ",obs[0])
         env.render(mode='human')
 
+    x_des = np.linspace(0,x[-1],len(x))
+    y_des = x_des*math.tan(env._initial_orientation)
+    plt.subplot(221)
+    plt.plot(ld)
+    plt.title('ld')
+    plt.grid()
+    plt.subplot(222)
+    plt.plot(x,y, linestyle='dashed')
+    plt.plot(x_des, y_des)
+    plt.legend("actual path", "desired path")
+    plt.title('path')
+    plt.grid()
+    plt.show()
     env.close()
 
 if __name__ == '__main__':

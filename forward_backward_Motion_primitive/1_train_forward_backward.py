@@ -7,55 +7,46 @@ os.sys.path.insert(0, parentdir)
 
 from turtlebot3_burger_GymEnv_forward import turtlebot3_burger_GymEnv_forward
 from turtlebot3_burger_GymEnv_backward import turtlebot3_burger_GymEnv_backward
+# from turtlebot3_burger_GymEnv_forward_4states import turtlebot3_burger_GymEnv_forward
 
-import datetime
 from stable_baselines3 import ppo, SAC
-from stable_baselines3.common.env_checker import check_env
-from stable_baselines3.common.evaluation import evaluate_policy
-from gymnasium.envs.registration import register
-from stable_baselines3.common.env_util import make_vec_env
 
 def main():
 
     MP_name = input("Forward(F)/ Backward (B) MP: ")
     if MP_name == "F":
         MP_name = "Forward"
-        # register(
-        #     # unique identifier for the env `name-version`
-        #     id="Turtlebot_waffle-F-v0",
-        #     # path to the class for creating the env
-        #     # Note: entry_point also accept a class as input (and not only a string)
-        #     entry_point="turtlebot3_burger_GymEnv_forward:turtlebot3_burger_GymEnv_forward",
-        # )
-        # env = make_vec_env("Turtlebot_waffle-F-v0", n_envs = 4, seed = 0, env_kwargs={"renders":True, "isDiscrete":False})
         env = turtlebot3_burger_GymEnv_forward(renders=True, isDiscrete=False)
     elif MP_name == "B":
         MP_name = "Backward"
-        # register(
-        #     # unique identifier for the env `name-version`
-        #     id="Turtlebot_waffle-B-v0",
-        #     # path to the class for creating the env
-        #     # Note: entry_point also accept a class as input (and not only a string)
-        #     entry_point="turtlebot3_burger_GymEnv_backward:turtlebot3_burger_GymEnv_backward",
-        # )
-        # env = make_vec_env("Turtlebot_waffle-B-v0", n_envs = 4, seed = 0, env_kwargs={"renders":True, "isDiscrete":False})
         env = turtlebot3_burger_GymEnv_backward(renders=True, isDiscrete=False)
     else:
         raise SystemExit("Incorrect MP name")
-    # check_env(env)
-    model = SAC("MlpPolicy", env, verbose=1)#,tensorboard_log="./tensorboard/PPO/forward_MP_31/")
-    # best = 0
-    model.learn(total_timesteps=300000)
-    model.save("./models/SAC/translation_MP/"+MP_name+"33")
-    # for i in range(20):
-    #     print("iteration: ",i)
-    #     model.learn(total_timesteps=100)
-    #     temp = evaluate_policy(model,model.env,n_eval_episodes=5)
-    #     if (temp[0]>best):
-    #         model.save("./best_models/PPO/translation_MP/"+MP_name+"6")
-    #         best=temp[0]
-    #     if (i%10==0):
-    #         model.save("./models/PPO/translation_MP/"+MP_name+"6")
-    #     model.save("./models/PPO/translation_MP/"+MP_name+"6")
+    model = ppo.PPO("MlpPolicy", env, verbose=1, n_steps=4000,tensorboard_log="./tensorboard/PPO/translation_MP/"+MP_name+"11")
+
+    # for i in range(500):
+    #     model.learn(total_timesteps=20000, reset_num_timesteps = False)
+    #     model.save(("./models/PPO/translation_MP/"+MP_name+"8/"+str(i)))
+    
+    best_dist = 0.01
+    best_ld = 1
+    v = 1000
+    for i in range(100):
+        print("iteration: ",i)
+        v = v+200
+        model.learn(total_timesteps=v, reset_num_timesteps = False)
+        done = False
+        obs,info = env.reset()
+        while not done:
+            action, _states = model.predict(obs, deterministic=True)
+            obs, reward, done,truncated, info = env.step(action)
+        if (obs[0] > best_dist and info['ld'] < best_ld):
+            model.save("./best_models/PPO/translation_MP/"+MP_name+"11")
+            best_dist = obs[0]
+            best_ld = info['ld']
+        if (i%10==0):
+            model.save("./models/PPO/translation_MP/"+MP_name+"11/"+str(i))
+    model.save("./models/PPO/translation_MP/"+MP_name+"11/"+str(i))
+
 if __name__ == '__main__':
     main()

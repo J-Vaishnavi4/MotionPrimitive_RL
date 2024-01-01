@@ -11,16 +11,19 @@ import pickle
 currentdir = os.path.dirname(__file__)
 
 MP_name = input("Forward(F)/ Backward (B) MP: ")
-if MP_name == "F" or MP_name == "B":
+if MP_name == "F":
+    MP_name = "Forward"
     pass
+elif  MP_name == "B":
+    MP_name = "Backward"
 else:
     raise SystemExit("Incorrect MP name")
 
 if not os.path.exists("./GP_models/"+MP_name):
    os.makedirs("./GP_models/"+MP_name)
 
-rows1 = pd.read_csv(os.path.join(currentdir, "./Samples/"+MP_name+"/samples.csv"), usecols=["displacement"])
-rows2 = pd.read_csv(os.path.join(currentdir, "./Samples/"+MP_name+"/samples.csv"), usecols=["time"])
+rows1 = pd.read_csv(os.path.join(currentdir, "./Samples/"+MP_name+"/samples_2_1.csv"), usecols=["displacement"])
+rows2 = pd.read_csv(os.path.join(currentdir, "./Samples/"+MP_name+"/samples_2_1.csv"), usecols=["time"])
 
 X = rows1.to_numpy()    # input to GP - Displacement (in metres)
 y = rows2.to_numpy()    # output of GP - timesteps for which policy should be applied for the required displacement
@@ -39,23 +42,23 @@ mean_prediction, std_prediction = gaussian_process.predict(X, return_std=True)
 plt.plot(X, y, label=r"$f(x) = timesteps$", linestyle="dotted")
 plt.scatter(X_train, y_train, label="Observations")
 plt.plot(X, mean_prediction, label="Mean prediction")
-plt.fill_between(
-    X.ravel(),
-    mean_prediction - 1.96 * std_prediction,
-    mean_prediction + 1.96 * std_prediction,
-    alpha=0.5,
-    label=r"95% confidence interval",
-)
-plt.legend()
-plt.xlabel("$displacement$")
-plt.ylabel("$timestep$")
-_ = plt.title("Gaussian process regression on noise-free dataset")
+# plt.fill_between(
+#     X.ravel(),
+#     mean_prediction - 1.96 * std_prediction,
+#     mean_prediction + 1.96 * std_prediction,
+#     alpha=0.5,
+#     label=r"95% confidence interval",
+# )
+# plt.legend()
+# plt.xlabel("$displacement$")
+# plt.ylabel("$timestep$")
+# _ = plt.title("Gaussian process regression on noise-free dataset")
 plt.show()
 
-with open("./GP_models/"+MP_name+"/no_noise_exp.dump" , "wb") as f:
+with open("./GP_models/"+MP_name+"/no_noise_exp_2_1.dump" , "wb") as f:
      pickle.dump(gaussian_process, f)
 
-model1 = pickle.load(open("./GP_models/"+MP_name+"/no_noise_exp.dump","rb"))
+model1 = pickle.load(open("./GP_models/"+MP_name+"/no_noise_exp_2_1.dump","rb"))
 
 
 "-------------------Gaussian process regression on noisy dataset---------------------------"
@@ -73,25 +76,25 @@ plt.plot(X, y, label=r"$f(x) = timesteps$", linestyle="dotted")
 plt.scatter(X_train, y_train_noisy, label = "Observations")
 
 plt.plot(X, mean_prediction, label="Mean prediction")
-plt.fill_between(
-    X.ravel(),
-    mean_prediction - 1.96 * std_prediction,
-    mean_prediction + 1.96 * std_prediction,
-    color="tab:orange",
-    alpha=0.5,
-    label=r"95% confidence interval",
-)
-plt.legend()
-plt.xlabel("$displacement$")
-plt.ylabel("$timestep$")
-_ = plt.title("Gaussian process regression on a noisy dataset")
+# plt.fill_between(
+#     X.ravel(),
+#     mean_prediction - 1.96 * std_prediction,
+#     mean_prediction + 1.96 * std_prediction,
+#     color="tab:orange",
+#     alpha=0.5,
+#     label=r"95% confidence interval",
+# )
+# plt.legend()
+# plt.xlabel("$displacement$")
+# plt.ylabel("$timestep$")
+# _ = plt.title("Gaussian process regression on a noisy dataset")
 
 plt.show()
 
-with open("./GP_models/"+MP_name+"/noisy_exp.dump" , "wb") as f:
+with open("./GP_models/"+MP_name+"/noisy_exp_2_1.dump" , "wb") as f:
      pickle.dump(gaussian_process, f)
 
-model2 = pickle.load(open("./GP_models/"+MP_name+"/noisy_exp.dump","rb"))
+model2 = pickle.load(open("./GP_models/"+MP_name+"/noisy_exp_2_1.dump","rb"))
 
 "---------------PREDICTION------------"
 required_displacement = 2.5  #metres

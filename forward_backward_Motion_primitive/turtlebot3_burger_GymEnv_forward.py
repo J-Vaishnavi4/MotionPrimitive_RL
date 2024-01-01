@@ -51,7 +51,7 @@ class turtlebot3_burger_GymEnv_forward(gym.Env):
     else:
       self._p = bc.BulletClient()
 
-    self.seed()
+    # self.seed()
     self.reset()
     observationDim = 4      # displacement, yaw_change, Lin_vel, Ang_vel
     observation_high = np.ones(observationDim) * 10  #np.inf
@@ -80,15 +80,20 @@ class turtlebot3_burger_GymEnv_forward(gym.Env):
     for i in range(100):
       self._p.stepSimulation()
     self._observation = self.getExtendedObservation()
+    # print("obs",self._observation)
     self._robot_initial_pos = self._observation[0]
     self._initial_orientation = self._observation[1]
     self._observation[0]=0  # initial displacement = 0
     self._observation[1]=0  # initial yaw_change = 0
     # self.reward_value=0
+    self.total_yaw_change = 0
     info = {}
     info['rew1']=0
     info['rew2']=0
     info['ld']=0
+    info['x'] = self._robot_initial_pos[0]
+    info['y'] = self._robot_initial_pos[1]
+    info['yaw_change'] = 0
     return np.array(self._observation), info
 
   def __del__(self):
@@ -126,26 +131,22 @@ class turtlebot3_burger_GymEnv_forward(gym.Env):
         break
       self._envStepCounter += 1
     # rew1, rew2, rew3, yaw_change, displacement= self._reward(action)
-    rew1, rew2, yaw_change, lateral_deviation, displacement = self._reward(action)
+    rew1, rew2, yaw_change, lateral_deviation, displacement, robot_position = self._reward2(action)
     reward = rew1 + rew2 #min(rew1, rew2)
     # self.reward_value += reward
+    # yaw_change = round(yaw_change,2)
     self._observation[0] = displacement
     self._observation[1] = yaw_change
     done = self._termination()
-    # if done:
-    #   with open("./reward/reward_FMP_6.csv",'a',newline='') as file:
-    #     writer = csv.writer(file)
-    #     writer.writerow(np.array([self.reward_value]))
-    #     file.close()
-    #   self.reward_value = 0
-    # if yaw_change>0.1:
-    #   print("displacement: ", displacement, yaw_change)
+
     truncated = done
     info = {}
     info['rew1']=rew1
     info['rew2']=rew2
     info['ld']=lateral_deviation
-    # info['rew3']=rew3
+    info['x'] = robot_position[0]
+    info['y'] = robot_position[1]
+    info['yaw_change'] = yaw_change
     return np.array(self._observation), reward, done, truncated, info
 
   def render(self, mode='human', close=False):
@@ -174,15 +175,16 @@ class turtlebot3_burger_GymEnv_forward(gym.Env):
   def _termination(self):
     robot_pos, robot_orn = self._p.getBasePositionAndOrientation(self._robot.robotUniqueId)
     yaw = self._p.getEulerFromQuaternion(robot_orn)[2]
-    yaw_change = abs(abs(yaw) - abs(self._initial_orientation))
+    # yaw_change = abs(abs(yaw) - abs(self._initial_orientation))
+    yaw_change = yaw - self._initial_orientation
     # print(self._envStepCounter)
 
     d = (abs(np.asarray(robot_pos) - np.asarray(self._robot_initial_pos)))
     displacement = math.sqrt(math.pow(d[0],2) + math.pow(d[1],2))
-    theta = math.atan((robot_pos[1]-self._robot_initial_pos[1])/(robot_pos[0]-self._robot_initial_pos[0]))
+    theta = math.atan2((robot_pos[1]-self._robot_initial_pos[1]),(robot_pos[0]-self._robot_initial_pos[0]))
     alpha = self._initial_orientation - theta
     lateral_deviation = abs(displacement*math.sin(alpha))
-    return lateral_deviation > 0.01 or yaw_change > 0.05 # or self._envStepCounter>10000 
+    return lateral_deviation > 0.01 or abs(yaw_change) > 0.1 
 
   def _sign_value(self,yaw):
     if abs(yaw) < math.pi/2:
@@ -215,33 +217,33 @@ class turtlebot3_burger_GymEnv_forward(gym.Env):
     d = (abs(np.asarray(robot_pos) - np.asarray(self._robot_initial_pos)))
     displacement = math.sqrt(math.pow(d[0],2) + math.pow(d[1],2))
     yaw = self._p.getEulerFromQuaternion(robot_orn)[2]
-    # print("yaw ", yaw)
-    yaw_change = abs(abs(yaw) - abs(self._initial_orientation))
-   
-    theta = math.atan((robot_pos[1]-self._robot_initial_pos[1])/(robot_pos[0]-self._robot_initial_pos[0]))
+    yaw_change = yaw - self._initial_orientation
+    theta = math.atan2((robot_pos[1]-self._robot_initial_pos[1]),(robot_pos[0]-self._robot_initial_pos[0]))
     alpha = self._initial_orientation - theta
     lateral_deviation = abs(displacement*math.sin(alpha))
     rew1 = 5*action[0]
-    rew2 = -100*yaw_change - 100*lateral_deviation
+    rew2 = - 20*abs(yaw_change) - 1000*lateral_deviation 
 
-    return rew1, rew2, yaw_change, lateral_deviation, displacement
+    return rew1, rew2, yaw_change, lateral_deviation, displacement, robot_pos
 
   def _reward2(self,action):
     robot_pos,robot_orn = self._p.getBasePositionAndOrientation(self._robot.robotUniqueId)
     d = (abs(np.asarray(robot_pos) - np.asarray(self._robot_initial_pos)))
     displacement = math.sqrt(math.pow(d[0],2) + math.pow(d[1],2))
     yaw = self._p.getEulerFromQuaternion(robot_orn)[2]
-    yaw_change = abs(abs(yaw) - abs(self._initial_orientation))
-
-    theta = math.atan((robot_pos[1]-self._robot_initial_pos[1])/(robot_pos[0]-self._robot_initial_pos[0]))
+    # yaw_change = abs(abs(yaw) - abs(self._initial_orientation))
+    yaw_change = yaw - self._initial_orientation
+    self.total_yaw_change += yaw_change
+    theta = math.atan2((robot_pos[1]-self._robot_initial_pos[1]),(robot_pos[0]-self._robot_initial_pos[0]))
     alpha = self._initial_orientation - theta
     lateral_deviation = abs(displacement*math.sin(alpha))
     # print("delta_yaw: ",yaw_change, self._initial_orientation, yaw)
     # lV, aV = self._p.getBaseVelocity(self._robot.robotUniqueId)
-
-    rew1 = 5*action[0]*(action[0]>0) - 3*(action[0]<=0)
-    rew2 = -10*yaw_change - 10*lateral_deviation #1*int(yaw_change <= 0.05) - 1*int(yaw_change > 0.05)
-    return rew1, rew2, yaw_change, lateral_deviation, displacement
+    
+    x = action[0]
+    rew1 =  2*(-10*(x-0.6)**4 - 2*(x-0.55)**3 - (x-0.55)**2 + 0.5)*(x>0) - 1*(x<=0)
+    rew2 = - 500*lateral_deviation #-20*abs(self.total_yaw_change) #1*int(yaw_change <= 0.05) - 1*int(yaw_change > 0.05)
+    return rew1, rew2, yaw_change, lateral_deviation, displacement, robot_pos
   
 
   if parse_version(gym.__version__) < parse_version('0.9.6'):

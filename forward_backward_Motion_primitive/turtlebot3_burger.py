@@ -11,9 +11,13 @@ class TurtleBot3:
         self.timeStep = timeStep
         self._p = bullet_client
         self.reset()
-
+        
     def reset(self):
-        euler_offset = (0, 0, 0)
+        # init_angle = np.random.uniform(-2.82, 2.82)
+        init_angle = np.arange(-180,180,1)
+        init_angle = np.random.choice(np.radians(init_angle))
+        euler_offset = (0, 0, init_angle)
+        # print("turtle: ", init_angle)
         quaternion_offset = self._p.getQuaternionFromEuler(euler_offset)
         robot = self._p.loadURDF(currentdir+'/turtlebot3_description/urdf/turtlebot3_burger.urdf.xacro',[0,0,0],baseOrientation=quaternion_offset)
 
@@ -22,8 +26,8 @@ class TurtleBot3:
         self.Wheels = [1,2] #1 is left 2 is right
         self.maxForce = 350
         self.nMotors = 2
-        self.speedMultiplierRight = 1*1
-        self.speedMultiplierLeft = 1*1
+        self.speedMultiplierRight = 0.5*1
+        self.speedMultiplierLeft = 0.5*1
 
         #no. of actions
         self.no_of_actions = 2
@@ -42,6 +46,7 @@ class TurtleBot3:
         observation.append(self._p.getEulerFromQuaternion(orn)[2])
         observation.append(np.linalg.norm(linV))
         observation.append(np.linalg.norm(angV))
+        
         return observation
 
     def applyAction(self, lin_vel,ang_vel):

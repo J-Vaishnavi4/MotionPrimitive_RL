@@ -151,9 +151,12 @@ class turtlebot3_burger_GymEnv_CCW(gym.Env):
     robot_pos, robot_orn = self._p.getBasePositionAndOrientation(self._robot.robotUniqueId)
     d = (abs(np.asarray(robot_pos) - np.asarray(self._robot_initial_pos)))
     displacement = math.sqrt(math.pow(d[0],2) + math.pow(d[1],2))
-    # if displacement>=0.15:
-      # print("terminated because of displacement")
-    return displacement>=0.04 #or self._envStepCounter>5000
+    yaw = self._p.getEulerFromQuaternion(robot_orn)[2]
+    if yaw < self._initial_orientation:
+      yaw_change = 2*math.pi + yaw - self._initial_orientation
+    else:
+      yaw_change = yaw - self._initial_orientation
+    return displacement > 0.02 or yaw_change > 4
 
   def _reward(self,action):
     robot_pos,robot_orn = self._p.getBasePositionAndOrientation(self._robot.robotUniqueId)
@@ -192,7 +195,9 @@ class turtlebot3_burger_GymEnv_CCW(gym.Env):
     else:
       yaw_change = yaw - self._initial_orientation
 
-    reward = action[1] - 10*displacement
+    x = action[1]
+    # reward = (0 < action[1] < 0.5)*yaw_change - 15*displacement - int(action[1]<0)*yaw_change
+    reward = 2*(-10*(x-0.6)**4 - 2*(x-0.55)**3 - (x-0.55)**2 + 0.5)*(x>0) - 1*(x<=0) - 15*displacement   #Model18, 20(modified the constants)
     return reward, yaw_change, displacement
 
   if parse_version(gym.__version__) < parse_version('0.9.6'):
