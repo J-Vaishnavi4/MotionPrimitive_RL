@@ -21,27 +21,39 @@ def main():
         raise SystemExit("Incorrect MP name")
 
     check_env(env)
-    model = ppo.PPO("MlpPolicy", env, verbose=1,tensorboard_log="./tensorboard/PPO/orientation_MP_CCW/"+MP_name+"21")
+    model = ppo.PPO("MlpPolicy", env, verbose=1)#,tensorboard_log="./tensorboard/PPO/orientation_MP_CCW/"+MP_name+"22")
 
-    best = 0.01
-    best_yaw = 0
-    v = 1000
-    for i in range(100):
+    # best = 0.01
+    # best_yaw = 0
+    # v = 100
+    # for i in range(100):
+    #     print("iteration: ",i)
+    #     v = v+100
+    #     model.learn(total_timesteps=v, reset_num_timesteps = False)
+    #     done = False
+    #     obs,info = env.reset()
+    #     while not done:
+    #         action, _states = model.predict(obs, deterministic=True)
+    #         obs, reward, done,truncated, info = env.step(action)
+    #     if (obs[0] < best):# and obs[1]>best_yaw):
+    #         model.save("./best_models/PPO/orientation_MP/"+MP_name+"22")
+    #         best = obs[0]
+    #         best_yaw = obs[1]
+    #     if (i%10==0):
+    #         model.save("./models/PPO/orientation_MP/"+MP_name+"22/"+str(i))
+    # model.save("./models/PPO/orientation_MP/"+MP_name+"22/"+str(i))
+
+    best = 0
+    for i in range(20):
         print("iteration: ",i)
-        v = v+200
-        model.learn(total_timesteps=v, reset_num_timesteps = False)
-        done = False
-        obs,info = env.reset()
-        while not done:
-            action, _states = model.predict(obs, deterministic=True)
-            obs, reward, done,truncated, info = env.step(action)
-        if (obs[0] < best):# and obs[1]>best_yaw):
-            model.save("./best_models/PPO/orientation_MP/"+MP_name+"21")
-            best = obs[0]
-            best_yaw = obs[1]
-        if (i%10==0):
-            model.save("./models/PPO/orientation_MP/"+MP_name+"21/"+str(i))
-    model.save("./models/PPO/orientation_MP/"+MP_name+"21/"+str(i))
+        model.learn(total_timesteps=20)
+        temp = evaluate_policy(model,model.env,n_eval_episodes=5)
+        if (temp[0]>best):
+            model.save("./best_models/PPO/orientation_MP/"+MP_name+"23")
+            best=temp[0]
+        if (i%9==0):
+            model.save("./models/PPO/orientation_MP/"+MP_name+"23")
+    model.save("./models/PPO/orientation_MP/"+MP_name+"23")
 
 if __name__ == '__main__':
     main()

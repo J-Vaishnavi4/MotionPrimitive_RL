@@ -33,7 +33,7 @@ class turtlebot3_burger_GymEnv_CW(gym.Env):
                isDiscrete=False,
                renders=False):
     #print("init")
-    self._timeStep = 0.01
+    self._timeStep = 0.002
     self._urdfRoot = urdfRoot
     self._actionRepeat = actionRepeat
     self._isEnableSelfCollision = isEnableSelfCollision
@@ -121,9 +121,10 @@ class turtlebot3_burger_GymEnv_CW(gym.Env):
       self._envStepCounter += 1
 
     # print("wait: ", time.time()-before-after_action)
-    reward,yaw_change, displacement = self._reward2(action)
+    reward,yaw_change, displacement = self._reward(action)
     self._observation[0] = displacement
     self._observation[1] = yaw_change
+    # print("ang ", self._observation[3], self._observation[2])
     done = self._termination()
     truncated = done
     info = {}
@@ -174,21 +175,21 @@ class turtlebot3_burger_GymEnv_CW(gym.Env):
     else:
       yaw_change = 2*math.pi - yaw + self._initial_orientation
     lV, aV = self._p.getBaseVelocity(self._robot.robotUniqueId)
-
+    
 
     " rew1: Penalize linear displacement from robot's initial position"
     " rew2: Angular velocity should be negative for clockwise rotation"
     " rew3: Robot should slow down as it is close to completing the 360 degree rotation"
 
-    # rew1 = -1000*(displacement)
-    # rew2 = 1000*(yaw_change)*(-aV[2])*(yaw_change <= 0.7*2*math.pi) + 500*(yaw_change)*(-aV[2])*(0.7*2*math.pi < yaw_change<=0.85*2*math.pi) + (50*yaw_change)*(-aV[2])*(0.85*2*math.pi < yaw_change <= 2*math.pi)
-    # rew3 = (0.85*2*math.pi < yaw_change < 2*math.pi)*(-aV[2])*(abs(self.prev_ang_vel)-abs(aV[2]))*1000
-    # reward = rew1 + rew2 + rew3
+    rew1 = -1000*(displacement)
+    rew2 = 1000*(yaw_change)*(-aV[2])*(yaw_change <= 0.7*2*math.pi) + 500*(yaw_change)*(-aV[2])*(0.7*2*math.pi < yaw_change<=0.85*2*math.pi) + (50*yaw_change)*(-aV[2])*(0.85*2*math.pi < yaw_change <= 2*math.pi)
+    rew3 = (0.85*2*math.pi < yaw_change < 2*math.pi)*(-aV[2])*(abs(self.prev_ang_vel)-abs(aV[2]))*1000
+    reward = rew1 + rew2 + rew3
 
-    rew1 = 20*(0.01 - displacement)                               # penalizing linear displacement from initial position
-    # rew2 = action[1]
-    # reward = rew1+rew2 # min(rew1,rew2)
-    reward = 10*int(action[1] < 0)*(-rew1 * action[1]) + 5*int(action[1] >= 0)*(-1)
+    # rew1 = 20*(0.01 - displacement)                               # penalizing linear displacement from initial position
+    # # rew2 = action[1]
+    # # reward = rew1+rew2 # min(rew1,rew2)
+    # reward = 10*int(action[1] < 0)*(-rew1 * action[1]) + 5*int(action[1] >= 0)*(-1)
     return reward, yaw_change, displacement
 
   def _reward2(self, action):

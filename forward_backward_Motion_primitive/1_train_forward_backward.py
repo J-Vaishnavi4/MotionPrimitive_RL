@@ -22,7 +22,7 @@ def main():
         env = turtlebot3_burger_GymEnv_backward(renders=True, isDiscrete=False)
     else:
         raise SystemExit("Incorrect MP name")
-    model = ppo.PPO("MlpPolicy", env, verbose=1, n_steps=4000,tensorboard_log="./tensorboard/PPO/translation_MP/"+MP_name+"11")
+    model = ppo.PPO("MlpPolicy", env, verbose=1, n_steps=4000,tensorboard_log="./tensorboard/PPO/translation_MP/"+MP_name+"12")
 
     # for i in range(500):
     #     model.learn(total_timesteps=20000, reset_num_timesteps = False)
@@ -41,12 +41,12 @@ def main():
             action, _states = model.predict(obs, deterministic=True)
             obs, reward, done,truncated, info = env.step(action)
         if (obs[0] > best_dist and info['ld'] < best_ld):
-            model.save("./best_models/PPO/translation_MP/"+MP_name+"11")
+            model.save("./best_models/PPO/translation_MP/"+MP_name+"12")
             best_dist = obs[0]
             best_ld = info['ld']
         if (i%10==0):
-            model.save("./models/PPO/translation_MP/"+MP_name+"11/"+str(i))
-    model.save("./models/PPO/translation_MP/"+MP_name+"11/"+str(i))
+            model.save("./models/PPO/translation_MP/"+MP_name+"12/"+str(i))
+    model.save("./models/PPO/translation_MP/"+MP_name+"12/"+str(i))
 
 if __name__ == '__main__':
     main()

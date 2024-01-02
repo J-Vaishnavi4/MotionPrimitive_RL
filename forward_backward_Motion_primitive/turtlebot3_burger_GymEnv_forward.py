@@ -47,7 +47,7 @@ class turtlebot3_burger_GymEnv_forward(gym.Env):
     self._cam_yaw = 50
     self._cam_pitch = -35
     if self._renders:
-      self._p = bc.BulletClient(connection_mode=pybullet.DIRECT)
+      self._p = bc.BulletClient(connection_mode=pybullet.GUI)
     else:
       self._p = bc.BulletClient()
 
@@ -131,7 +131,7 @@ class turtlebot3_burger_GymEnv_forward(gym.Env):
         break
       self._envStepCounter += 1
     # rew1, rew2, rew3, yaw_change, displacement= self._reward(action)
-    rew1, rew2, yaw_change, lateral_deviation, displacement, robot_position = self._reward2(action)
+    rew1, rew2, yaw_change, lateral_deviation, displacement, robot_position = self._reward(action)
     reward = rew1 + rew2 #min(rew1, rew2)
     # self.reward_value += reward
     # yaw_change = round(yaw_change,2)
@@ -221,8 +221,10 @@ class turtlebot3_burger_GymEnv_forward(gym.Env):
     theta = math.atan2((robot_pos[1]-self._robot_initial_pos[1]),(robot_pos[0]-self._robot_initial_pos[0]))
     alpha = self._initial_orientation - theta
     lateral_deviation = abs(displacement*math.sin(alpha))
-    rew1 = 5*action[0]
-    rew2 = - 20*abs(yaw_change) - 1000*lateral_deviation 
+    # rew1 = 5*action[0]
+    x = action[0]
+    rew1 =  10*(-10*(x-0.6)**4 - 2*(x-0.55)**3 - (x-0.55)**2 + 0.5)*(x>0) - 1*(x<=0)
+    rew2 = - 20*abs(yaw_change) - 500*lateral_deviation 
 
     return rew1, rew2, yaw_change, lateral_deviation, displacement, robot_pos
 
