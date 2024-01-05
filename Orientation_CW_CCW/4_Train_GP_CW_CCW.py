@@ -20,8 +20,8 @@ if not os.path.exists("./GP_models/"+MP_name):
    os.makedirs("./GP_models/"+MP_name)
 
 # samples_21_90 for CCW, samples_21_70 for CW
-rows1 = pd.read_csv(os.path.join(currentdir, "./Samples/"+MP_name+"/samples_21_90_1.csv"), usecols=["Yaw_change"])
-rows2 = pd.read_csv(os.path.join(currentdir, "./Samples/"+MP_name+"/samples_21_90_1.csv"), usecols=["time"])
+rows1 = pd.read_csv(os.path.join(currentdir, "./Samples/"+MP_name+"/samples_24.csv"), usecols=["Yaw_change"])
+rows2 = pd.read_csv(os.path.join(currentdir, "./Samples/"+MP_name+"/samples_24.csv"), usecols=["time"])
 
 # rows1 = pd.read_csv(os.path.join(currentdir, "./Samples/"+MP_name+"/samples_13_1.csv"), usecols=["Yaw_change"])
 # rows2 = pd.read_csv(os.path.join(currentdir, "./Samples/"+MP_name+"/samples_13_1.csv"), usecols=["time"])
@@ -55,10 +55,10 @@ plt.ylabel("$time$")
 _ = plt.title("Gaussian process regression on noise-free dataset")
 plt.show()
 
-with open("./GP_models/"+MP_name+"/no_noise_exp_21_90_1.dump" , "wb") as f:
+with open("./GP_models/"+MP_name+"/no_noise_exp_24.dump" , "wb") as f:
      pickle.dump(gaussian_process, f)
 
-model1 = pickle.load(open("./GP_models/"+MP_name+"/no_noise_exp_21_90_1.dump","rb"))
+model1 = pickle.load(open("./GP_models/"+MP_name+"/no_noise_exp_24.dump","rb"))
 
 
 "-------------------Gaussian process regression on noisy dataset---------------------------"
@@ -91,10 +91,10 @@ _ = plt.title("Gaussian process regression on a noisy dataset")
 
 plt.show()
 
-with open("./GP_models/"+MP_name+"/noisy_exp_21_90_1.dump" , "wb") as f:
+with open("./GP_models/"+MP_name+"/noisy_exp_24.dump" , "wb") as f:
      pickle.dump(gaussian_process, f)
 
-model2 = pickle.load(open("./GP_models/"+MP_name+"/noisy_exp_21_90_1.dump","rb"))
+model2 = pickle.load(open("./GP_models/"+MP_name+"/noisy_exp_24.dump","rb"))
 
 "---------------PREDICTION------------"
 required_yaw = 2.5  #radians

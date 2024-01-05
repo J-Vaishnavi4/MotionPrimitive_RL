@@ -68,7 +68,9 @@ class turtlebot3_burger_GymEnv_CW(gym.Env):
     self._p.resetSimulation()
     #self._p.setPhysicsEngineParameter(numSolverIterations=300)
     self._p.setTimeStep(self._timeStep)
-    self._p.loadURDF(currentdir+'/turtlebot3_description/urdf/simpleplane.urdf')
+    # self._p.loadURDF(currentdir+'/turtlebot3_description/urdf/simpleplane.urdf')
+    self._p.setAdditionalSearchPath(pybullet_data.getDataPath())
+    self._p.loadURDF("plane.urdf")
     self._p.setGravity(0, 0, -10)
     self._robot = turtlebot3_burger.TurtleBot3(self._p, urdfRootPath=self._urdfRoot, timeStep=self._timeStep)
     self._envStepCounter = 0
@@ -181,15 +183,17 @@ class turtlebot3_burger_GymEnv_CW(gym.Env):
     " rew2: Angular velocity should be negative for clockwise rotation"
     " rew3: Robot should slow down as it is close to completing the 360 degree rotation"
 
-    rew1 = -1000*(displacement)
-    rew2 = 1000*(yaw_change)*(-aV[2])*(yaw_change <= 0.7*2*math.pi) + 500*(yaw_change)*(-aV[2])*(0.7*2*math.pi < yaw_change<=0.85*2*math.pi) + (50*yaw_change)*(-aV[2])*(0.85*2*math.pi < yaw_change <= 2*math.pi)
-    rew3 = (0.85*2*math.pi < yaw_change < 2*math.pi)*(-aV[2])*(abs(self.prev_ang_vel)-abs(aV[2]))*1000
-    reward = rew1 + rew2 + rew3
+    # rew1 = -1000*(displacement)
+    # rew2 = 1000*(yaw_change)*(-aV[2])*(yaw_change <= 0.7*2*math.pi) + 500*(yaw_change)*(-aV[2])*(0.7*2*math.pi < yaw_change<=0.85*2*math.pi) + (50*yaw_change)*(-aV[2])*(0.85*2*math.pi < yaw_change <= 2*math.pi)
+    # rew3 = (0.85*2*math.pi < yaw_change < 2*math.pi)*(-aV[2])*(abs(self.prev_ang_vel)-abs(aV[2]))*1000
+    # reward = rew1 + rew2 + rew3
 
     # rew1 = 20*(0.01 - displacement)                               # penalizing linear displacement from initial position
     # # rew2 = action[1]
     # # reward = rew1+rew2 # min(rew1,rew2)
     # reward = 10*int(action[1] < 0)*(-rew1 * action[1]) + 5*int(action[1] >= 0)*(-1)
+
+    reward = -action[1] - 15*displacement
     return reward, yaw_change, displacement
 
   def _reward2(self, action):

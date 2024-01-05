@@ -22,7 +22,7 @@ def main():
         raise SystemExit("Incorrect MP name")
     #check_env(env)
 
-    model = ppo.PPO.load(os.path.join(currentdir,"./models/PPO/orientation_MP/"+MP_name+"22/90"))
+    model = ppo.PPO.load(os.path.join(currentdir,"./models/PPO/orientation_MP/"+MP_name+"24"))
     # model = ppo.PPO.load(os.path.join(currentdir,"./best_models/PPO/orientation_MP/"+MP_name+"18"))
     obs,info = env.reset()
     done = False
@@ -44,8 +44,8 @@ def main():
             # total_rew=0
             break
     env.close()
-    print(rew)
-    print("reward",total_rew)
+    # print(rew)
+    # print("reward",total_rew)
     plt.subplot(221)
     plt.plot(displacement)
     plt.title("displacement")

@@ -25,10 +25,10 @@ def main():
 
     # best = 0.01
     # best_yaw = 0
-    # v = 100
+    # v = 1000
     # for i in range(100):
     #     print("iteration: ",i)
-    #     v = v+100
+    #     v = v+200
     #     model.learn(total_timesteps=v, reset_num_timesteps = False)
     #     done = False
     #     obs,info = env.reset()
@@ -43,17 +43,19 @@ def main():
     #         model.save("./models/PPO/orientation_MP/"+MP_name+"22/"+str(i))
     # model.save("./models/PPO/orientation_MP/"+MP_name+"22/"+str(i))
 
-    best = 0
-    for i in range(20):
-        print("iteration: ",i)
-        model.learn(total_timesteps=20)
-        temp = evaluate_policy(model,model.env,n_eval_episodes=5)
-        if (temp[0]>best):
-            model.save("./best_models/PPO/orientation_MP/"+MP_name+"23")
-            best=temp[0]
-        if (i%9==0):
-            model.save("./models/PPO/orientation_MP/"+MP_name+"23")
-    model.save("./models/PPO/orientation_MP/"+MP_name+"23")
+    model.learn(total_timesteps=400000)
+    model.save("./models/PPO/orientation_MP/"+MP_name+"24")
+    # best = 0
+    # for i in range(20):
+    #     print("iteration: ",i)
+    #     model.learn(total_timesteps=20)
+    #     temp = evaluate_policy(model,model.env,n_eval_episodes=5)
+    #     if (temp[0]>best):
+    #         model.save("./best_models/PPO/orientation_MP/"+MP_name+"23")
+    #         best=temp[0]
+    #     if (i%9==0):
+    #         model.save("./models/PPO/orientation_MP/"+MP_name+"23")
+    # model.save("./models/PPO/orientation_MP/"+MP_name+"23")
 
 if __name__ == '__main__':
     main()

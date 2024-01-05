@@ -47,7 +47,7 @@ class turtlebot3_burger_GymEnv_forward(gym.Env):
     self._cam_yaw = 50
     self._cam_pitch = -35
     if self._renders:
-      self._p = bc.BulletClient(connection_mode=pybullet.GUI)
+      self._p = bc.BulletClient(connection_mode=pybullet.DIRECT)
     else:
       self._p = bc.BulletClient()
 
@@ -64,11 +64,7 @@ class turtlebot3_burger_GymEnv_forward(gym.Env):
       self.action_space = spaces.Box(-action_high, action_high, dtype=np.float32)
     self.observation_space = spaces.Box(-observation_high, observation_high, dtype=float)
     self.viewer = None
-    # if not os.path.exists("./reward/"):
-    #    os.makedirs("./reward/")
-    # with open("./reward/reward_FMP_6.csv",'w',newline='') as file:
-    #   writer = csv.writer(file)
-  
+
   def reset(self,seed = None):
     self._p.resetSimulation()
     self._p.setTimeStep(self._timeStep)
@@ -80,12 +76,11 @@ class turtlebot3_burger_GymEnv_forward(gym.Env):
     for i in range(100):
       self._p.stepSimulation()
     self._observation = self.getExtendedObservation()
-    # print("obs",self._observation)
     self._robot_initial_pos = self._observation[0]
     self._initial_orientation = self._observation[1]
     self._observation[0]=0  # initial displacement = 0
     self._observation[1]=0  # initial yaw_change = 0
-    # self.reward_value=0
+
     self.total_yaw_change = 0
     info = {}
     info['rew1']=0
@@ -111,7 +106,6 @@ class turtlebot3_burger_GymEnv_forward(gym.Env):
     if (self._renders):
       basePos, orn = self._p.getBasePositionAndOrientation(self._robot.robotUniqueId)
       d = (abs(np.asarray(basePos)[0] - np.asarray(self._robot_initial_pos)))
-      self._prev_speed = self._observation[2]
     if (self._isDiscrete):
       rightVel = [-1, -0.5, -0.1, 0, 0.5, 0.1, 1, 0.2, 0.8]
       leftVel = [-1, -0.5, -0.1, 0, 0.5, 0.1, 1, 0.2, 0.8]
@@ -221,10 +215,10 @@ class turtlebot3_burger_GymEnv_forward(gym.Env):
     theta = math.atan2((robot_pos[1]-self._robot_initial_pos[1]),(robot_pos[0]-self._robot_initial_pos[0]))
     alpha = self._initial_orientation - theta
     lateral_deviation = abs(displacement*math.sin(alpha))
-    # rew1 = 5*action[0]
-    x = action[0]
-    rew1 =  10*(-10*(x-0.6)**4 - 2*(x-0.55)**3 - (x-0.55)**2 + 0.5)*(x>0) - 1*(x<=0)
-    rew2 = - 20*abs(yaw_change) - 500*lateral_deviation 
+    rew1 = 5*action[0]
+    # x = action[0]
+    # rew1 =  10*(-10*(x-0.6)**4 - 2*(x-0.55)**3 - (x-0.55)**2 + 0.5)*(x>0) - 1*(x<=0)
+    rew2 = - 20*abs(yaw_change) - 1000*lateral_deviation 
 
     return rew1, rew2, yaw_change, lateral_deviation, displacement, robot_pos
 

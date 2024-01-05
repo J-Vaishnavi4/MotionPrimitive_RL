@@ -24,10 +24,10 @@ def main():
     #check_env(env)
 
     # samples_21_90 for CCW, samples_21_70 for CW
-    model = ppo.PPO.load(os.path.join(currentdir,"./models/PPO/orientation_MP/"+MP_name+"21/90"))
+    model = ppo.PPO.load(os.path.join(currentdir,"./models/PPO/orientation_MP/"+MP_name+"24"))
 
-    GP_ = pickle.load(open(os.path.join(currentdir,"./GP_models/"+MP_name+"/noisy_exp_21_90_1.dump"), "rb"))
-    required_yaw = 2
+    GP_ = pickle.load(open(os.path.join(currentdir,"./GP_models/"+MP_name+"/no_noise_exp_24.dump"), "rb"))
+    required_yaw = 3
     mean_prediction, std_prediction = GP_.predict(np.array([required_yaw]).reshape(1,-1), return_std=True)
     print(5*mean_prediction[0][0])
     required_timesteps = round(mean_prediction[0][0])
@@ -37,12 +37,12 @@ def main():
     rew=0
     print("init orientation: ", env._initial_orientation)
     print("init position: ", env._robot_initial_pos)
-    for j in range(1500):
+    for j in range(750):
 
         if j <= required_timesteps:
             action, _states = model.predict(obs, deterministic=True)
             obs, reward, done,truncated, info = env.step(action)
-            print("Action: ",action)
+            # print("Action: ",action)
         else:
             action = [0,0]
             obs, reward, done,truncated, info = env.step(action)
@@ -50,7 +50,7 @@ def main():
             print("Required orientation_change: "+ str(required_yaw)+"\nPredicted timesteps: "+str(required_timesteps)+ \
             "\nstandard deviation: "+str(std_prediction[0]))
             print("Actual orientation change: ",obs[1])
-            print("ld: ", obs[0])
+            print("displacement: ", obs[0])
         env.render(mode='human')
 
     env.close()

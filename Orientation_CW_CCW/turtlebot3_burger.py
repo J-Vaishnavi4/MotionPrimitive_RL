@@ -14,13 +14,18 @@ class TurtleBot3:
 
     def reset(self):
         init_angle =np.random.uniform(low=-math.pi, high=math.pi)
-        init_x =np.random.uniform(low=-100, high=100)
-        init_y =np.random.uniform(low=-100, high=100)
+        init_x =np.random.uniform(low=-10, high=10)
+        init_y =np.random.uniform(low=-10, high=10)
         # init_angle, init_x, init_y = -1.138214407202498, -5.726495713586985, -51.814113092004945    #CCW Sample
         # init_angle, init_x, init_y = -0.809946694764633, 17.196942333320962, 51.16743580960241      #CW Sample
+        # init_angle, init_x, init_y = 1.483170738523647, 6.725357855027365, -0.7632824475452686     #CW_24
+        # init_angle, init_x, init_y = -2.097916968913103, 3.658051386056279, -1.9265580881536781      #CCW_24
         euler_offset = (0, 0, init_angle)
         quaternion_offset = self._p.getQuaternionFromEuler(euler_offset)
-        robot = self._p.loadURDF(currentdir+'/turtlebot3_description/urdf/turtlebot3_burger.urdf.xacro',[init_x,init_y,0],baseOrientation=quaternion_offset)
+        # robot = self._p.loadURDF(currentdir+'/turtlebot3_description/urdf/turtlebot3_burger.urdf.xacro',[0,0,0],baseOrientation=quaternion_offset)
+        
+        robot = self._p.loadURDF(currentdir+'/turtlebot3_description/urdf/tm_turtlebot3.urdf',[init_x,init_y,0],baseOrientation=quaternion_offset)
+
         # print(init_angle, init_x, init_y)
         self.robotUniqueId = robot
 

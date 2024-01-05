@@ -28,7 +28,7 @@ def main():
         raise SystemExit("Incorrect MP name")
     #check_env(env)
     
-    model = ppo.PPO.load(os.path.join(currentdir,"./models/PPO/translation_MP/"+MP_name+"12/90"))
+    model = ppo.PPO.load(os.path.join(currentdir,"./models/PPO/translation_MP/"+MP_name+"13/99"))
     obs,info = env.reset()
     done = False
     rew=0
